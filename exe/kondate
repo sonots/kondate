@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+
+require "kondate/cli"
+Kondate::CLI.start(ARGV)
