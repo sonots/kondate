@@ -223,6 +223,8 @@ set :set_property, YAML.load_file(ENV['TARGET_NODE_FILE'])
 
 because these ENVs are passed by `kondate serverspec`. 
 
+See [templates/spec/spec_helper.rb](./lib/kondate/templates/spec/spec_helper.rb) for an example.
+
 ## Host Plugin
 
 The default reads `hosts.yml` to resolve roles of a host, but 
