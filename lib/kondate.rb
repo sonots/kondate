@@ -5,6 +5,6 @@ end
 require "kondate/version"
 require "kondate/config"
 require "kondate/property_builder"
-require "ext/hash/deep_merge"
+require "kondate/hash_ext"
 require "kondate/string_util"
 require "kondate/error"

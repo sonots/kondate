@@ -283,6 +283,18 @@ host_plugin:
 
 `config.type` and `config.path` is available in the above config.
 
+## Development
+
+```
+bundle exec exe/kondate generate
+vagrant up
+```
+
+```
+bundle exec exe/kondate itamae vagrant-centos --role sample
+bundle exec exe/kondate serverspec vagrant-centos --role sample
+```
+
 ## ToDo
 
 write tests

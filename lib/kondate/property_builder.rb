@@ -74,14 +74,14 @@ module Kondate
       role_property        = get_content(role_file(role))
       secret_role_property = get_content(secret_role_file(role))
 
-      property = {
+      property = HashExt.new.deep_merge!({
         'role'  => role,
         'roles' => roles,
         'attributes' => {},
-      }.deep_merge!(role_property).
+      }).deep_merge!(role_property).
       deep_merge!(secret_role_property).
       deep_merge!(node_property).
-      deep_merge!(secret_node_property)
+      deep_merge!(secret_node_property).to_h
 
       # filter out the recipe
       if filter_recipes and !filter_recipes.empty?

@@ -16,3 +16,4 @@
 /hosts.yml
 .ruby-version
 /kondate/
+.vagrant
