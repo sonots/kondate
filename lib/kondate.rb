@@ -1,4 +1,6 @@
-HOKKE_GEM_ROOT = File.expand_path('..', File.dirname(__FILE__)) unless defined?(HOKKE_GEM_ROOT)
+module Kondate
+  ROOT = File.expand_path('../..', __FILE__)
+end
 
 require "kondate/version"
 require "kondate/config"

@@ -31,7 +31,7 @@ module Kondate
         FileUtils.mkdir_p(File.join(target_dir, dir)) unless @options[:dry_run]
       end
 
-      templates_dir = File.join(HOKKE_GEM_ROOT, 'lib', 'kondate', 'templates')
+      templates_dir = File.join(Kondate::ROOT, 'lib', 'kondate', 'templates')
       templates_dir_length = templates_dir.length
       Find.find(templates_dir).select {|f| File.file?(f) }.each do |src|
         dst = File.join(target_dir, src[templates_dir_length+1 .. -1])
