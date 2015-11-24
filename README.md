@@ -47,25 +47,26 @@ $ bundle exec kondate serverspec <host>
 ```
 .
 ├── .kondate.conf     # kondate configuration
-├── bootstrap.rb    # itamae bootstrap
-├── hosts.yml       # manages hostnames and its roles
-├── properties      # manages run_lists and attributes
-│   ├── nodes       # host specific properties
-│   └── roles       # role properties
-│       └── sample.yml
-├── secrets         # manages secrets attributes such as passwords
+├── bootstrap.rb      # itamae bootstrap
+├── hosts.yml         # manages hostnames and its roles
+├── properties        # manages run_lists and attributes
+│   ├── nodes         # host specific properties
+│   ├── roles         # role properties
+│   └── environments  # environment properties
+├── secrets           # manages secrets attributes such as passwords
 │   └── properties
 │       ├── nodes
-│       └── roles
-├── recipes         # itamae recipes
-│   ├── middleware  # middleware recipes
+│       ├── roles
+│       └── environments
+├── recipes           # itamae recipes
+│   ├── middleware    # middleware recipes
 │   │   └── base
 │   │       └── default.rb
-│   └── roles       # role recipes
-└── spec            # serverspec specs
-    ├── middleware  # middleware recipes specs
+│   └── roles         # role recipes
+└── spec              # serverspec specs
+    ├── middleware    # middleware recipes specs
     │   └── base_spec.rb
-    ├─  roles       # role recipes specs
+    ├─  roles         # role recipes specs
     └── spec_helper.rb
 ```
 
@@ -80,8 +81,10 @@ middleware_recipes_serverspec_dir: spec/middleware
 roles_recipes_serverspec_dir: spec/roles
 nodes_properties_dir: properties/nodes
 roles_properties_dir: properties/roles
+environments_properties_dir: properties/environments
 secret_nodes_properties_dir: secrets/properties/nodes
 secret_roles_properties_dir: secrets/properties/roles
+secret_environments_properties_dir: secrets/properties/environments
 plugin_dir: lib
 host_plugin:
   type: file
@@ -117,10 +120,10 @@ You can create your own host plugin. See `Host Plugin` section for more details.
 Property files are places to write recipes to run and attributes values.
 
 ```
-├── properties      # manages run_lists and attributes
-│   ├── nodes       # host specific properties
-│   └── roles       # role properties
-│       └── sample.yml
+├── properties        # manages run_lists and attributes
+│   ├── nodes         # host specific properties
+│   ├── roles         # role properties
+│   └── environments  # environment properties
 ```
 
 An example looks like below:
@@ -141,7 +144,7 @@ attributes:
 
 The attributes variables are accessible like `attrs['rbenv']['versions']` in recipes, which is equivalent and short version of `node['attributes']['rbenv']['versions']`.
 
-You can also prepare a host-specific property file such as:
+You can also prepare host-specific property files such as:
 
 properties/nodes/#{host}.yml
 
@@ -151,7 +154,19 @@ attributes:
     worker_processes: 8
 ```
 
-These files are merged on kondate execution in order of `role` + `node` (`node` file overwrites `role` file).
+In addition, you can also prepare environment property files such as:
+
+properties/environments/development.yml
+
+```
+attributes:
+  global:
+    aws_region: ap-northeast-1
+```
+
+The `global` is a reserved name, the `global` is used to only store global attributes, and do not run `global` recipe.
+
+These files are merged on kondate execution in order of `environment` + `role` + `node` (`node` > `role` > `environment` in the strong order).
 
 ### secret properties
 
@@ -161,7 +176,8 @@ Secret properties are places to write confidential attributes.
 ├── secrets         # manages secrets attributes such as passwords
 │   └── properties
 │       ├── nodes
-│       └── roles
+│       ├── roles
+│       └── environments
 ```
 
 An example looks like below:
@@ -250,21 +266,28 @@ require 'yaml'
 
 module Kondate
   module HostPlugin
-    class File
+    # YAML format
+    #
+    # host1: [role1, role2]
+    # host2: [role1, role2]
+    class File < Base
       # @param [HashWithIndifferentAccess] config
       def initialize(config)
+        super
         raise ConfigError.new('file: path is not configured') unless config.path
         @path = config.path
       end
 
       # @param [String] host hostname
+      # @return [String] environment name
+      def get_environment(host)
+        ENV['ENVIRONMENT']
+      end
+
+      # @param [String] host hostname
       # @return [Array] array of roles
       def get_roles(host)
-        # YAML format
-        #
-        # host1: [role1, role2]
-        # host2: [role1, role2]
-        YAML.load_file(@path)[host]
+        YAML.load_file(@path)[host]['roles']
       end
     end
   end

@@ -41,8 +41,10 @@ module Kondate
           'roles_recipes_serverspec_dir' => roles_recipes_serverspec_dir,
           'nodes_properties_dir' => nodes_properties_dir,
           'roles_properties_dir' => roles_properties_dir,
+          'environments_properties_dir' => environments_properties_dir,
           'secret_nodes_properties_dir' => secret_nodes_properties_dir,
           'secret_roles_properties_dir' => secret_roles_properties_dir,
+          'secret_environments_properties_dir' => secret_environments_properties_dir,
         }
       end
 
@@ -70,12 +72,20 @@ module Kondate
         config[:roles_properties_dir] || 'properties/roles'
       end
 
+      def environments_properties_dir
+        config[:environments_properties_dir] || 'properties/environments'
+      end
+
       def secret_nodes_properties_dir
         config[:secret_nodes_properties_dir] || 'secrets/properties/nodes'
       end
 
       def secret_roles_properties_dir
         config[:secret_roles_properties_dir] || 'secrets/properties/roles'
+      end
+
+      def secret_environments_properties_dir
+        config[:secret_environments_properties_dir] || 'secrets/properties/environments'
       end
 
       def plugin_dir

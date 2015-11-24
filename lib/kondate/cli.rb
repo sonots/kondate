@@ -34,6 +34,7 @@ module Kondate
       templates_dir = File.join(Kondate::ROOT, 'lib', 'kondate', 'templates')
       templates_dir_length = templates_dir.length
       Find.find(templates_dir).select {|f| File.file?(f) }.each do |src|
+        next if File.basename(src) == '.gitkeep'
         dst = File.join(target_dir, src[templates_dir_length+1 .. -1])
         dst_dir = File.dirname(dst)
         unless Dir.exist?(dst_dir)
@@ -94,8 +95,9 @@ module Kondate
 
           ENV['TARGET_NODE_FILE'] = property_file
           recipes = YAML.load_file(property_file)['attributes'].keys.map {|recipe|
+            next if recipe == 'global'
             File.join(Config.middleware_recipes_serverspec_dir, recipe)
-          }
+          }.compact
           recipes << File.join(Config.roles_recipes_serverspec_dir, role)
           t.pattern = '{' + recipes.join(',') + '}_spec.rb'
         end

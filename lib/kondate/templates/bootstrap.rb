@@ -3,6 +3,7 @@ require 'kondate'
 
 recipes = node['attributes'].keys
 recipes.each do |recipe|
+  next if recipe == 'global'
   include_recipe(File.join(Kondate::Config.middleware_recipes_dir, recipe, "default.rb"))
 end
 if File.exist?(File.join(Kondate::Config.roles_recipes_dir, node[:role], "default.rb"))

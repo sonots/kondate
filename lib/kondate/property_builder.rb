@@ -9,6 +9,16 @@ module Kondate
       @host = host
     end
 
+    def environment
+      @environment ||=
+        begin
+          vagrant? ? '' : Config.host_plugin.get_environment(@host)
+        rescue => e
+          $stderr.puts "cannot get environment from host:#{@host}, #{e.class} #{e.message}"
+          ''
+        end
+    end
+
     def roles
       @roles ||=
         begin
@@ -58,6 +68,14 @@ module Kondate
       File.join(Config.secret_roles_properties_dir, "#{role}.yml")
     end
 
+    def environment_file(environment)
+      File.join(Config.environments_properties_dir, "#{environment}.yml")
+    end
+
+    def secret_environment_file(environment)
+      File.join(Config.secret_environments_properties_dir, "#{environment}.yml")
+    end
+
     def get_content(yaml_file)
       content = File.exist?(yaml_file) ? YAML.load_file(yaml_file) : {}
       content.is_a?(Hash) ? content : {}
@@ -69,16 +87,22 @@ module Kondate
     #
     # This file is automatically created and removed
     def install(role, filter_recipes = nil)
-      node_property        = get_content(node_file)
-      secret_node_property = get_content(secret_node_file)
-      role_property        = get_content(role_file(role))
-      secret_role_property = get_content(secret_role_file(role))
+      node_property               = get_content(node_file)
+      secret_node_property        = get_content(secret_node_file)
+      role_property               = get_content(role_file(role))
+      secret_role_property        = get_content(secret_role_file(role))
+      environment_property        = get_content(environment_file(environment))
+      secret_environment_property = get_content(secret_environment_file(environment))
 
       property = HashExt.new.deep_merge!({
-        'role'  => role,
-        'roles' => roles,
-        'attributes' => {},
-      }).deep_merge!(role_property).
+        'environment' => environment,
+        'role'        => role,
+        'roles'       => roles,
+        'attributes'  => {},
+      }).
+      deep_merge!(environment_property).
+      deep_merge!(secret_environment_property).
+      deep_merge!(role_property).
       deep_merge!(secret_role_property).
       deep_merge!(node_property).
       deep_merge!(secret_node_property).to_h
@@ -93,7 +117,7 @@ module Kondate
       if property['attributes'].empty?
         nil
       else
-        Tempfile.open("provisioning_") do |fp|
+        Tempfile.open("kondate_") do |fp|
           YAML.dump(property, fp)
         end.path
       end
