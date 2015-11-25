@@ -259,7 +259,7 @@ You must follow the below naming conventions:
 
 ### Interface
 
-What you have to implement is `#initialize` and `#get_roles` methods. Here is an example of file plugin:
+What you have to implement are `#initialize`, `#get_environment`, and `#get_roles` methods. Here is an example of file plugin:
 
 ```ruby
 require 'yaml'
@@ -287,7 +287,7 @@ module Kondate
       # @param [String] host hostname
       # @return [Array] array of roles
       def get_roles(host)
-        YAML.load_file(@path)[host]['roles']
+        YAML.load_file(@path)[host]
       end
     end
   end
