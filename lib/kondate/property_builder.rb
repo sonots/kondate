@@ -109,6 +109,7 @@ module Kondate
 
       # filter out the recipe
       if filter_recipes and !filter_recipes.empty?
+        filter_recipes << 'global'
         property['attributes'].keys.each do |key|
           property['attributes'].delete(key) unless filter_recipes.include?(key)
         end
