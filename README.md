@@ -246,15 +246,21 @@ The default reads `hosts.yml` to resolve roles of a host, but
 you may want to resolve roles from AWS EC2 `roles` tag, or
 you may want to resolve roles from your own host resolver API application.
 
-Thus, `kondate` provides a plugin system to reolve hosts' roles.
+Thus, `kondate` provides a plugin system to resolve hosts' roles.
 
 ### Naming Convention
 
 You must follow the below naming conventions:
 
-* gem name: kondate-host_plugin-xxx (xxx_yyy)
+* gem name: kondate-host_plugin-xxx (xxx_yyy) (if you want to make a gem)
 * file name: lib/kondate/host_plugin/xxx.rb (xxx_yyy.rb)
 * class name: Kondate::HostPlugin::Xxx (XxxYyy)
+
+If you want to put your own host plugin locally without publishing a gem, you can configure the location with .kondate.conf as:
+
+```
+plugin_dir: lib
+```
 
 ### Interface
 
