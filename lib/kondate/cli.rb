@@ -95,7 +95,6 @@ module Kondate
 
           ENV['TARGET_NODE_FILE'] = property_file
           recipes = YAML.load_file(property_file)['attributes'].keys.map {|recipe|
-            next if recipe == 'global'
             File.join(Config.middleware_recipes_serverspec_dir, recipe)
           }.compact
           recipes << File.join(Config.roles_recipes_serverspec_dir, role)
@@ -110,8 +109,11 @@ module Kondate
 
     def build_property_files(host)
       builder = PropertyBuilder.new(host)
-      roles   = @options[:role] ? builder.filter_roles(@options[:role]) : builder.roles
-      $stderr.puts 'No role' and exit(1) if roles.empty?
+      roles   = builder.filter_roles(@options[:role])
+      if roles.nil? or roles.empty?
+        $stderr.puts 'No role'
+        exit(1)
+      end
       $stdout.puts "roles: [#{roles.join(', ')}]"
 
       property_files = {}

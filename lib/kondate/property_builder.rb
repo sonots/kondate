@@ -12,9 +12,9 @@ module Kondate
     def environment
       @environment ||=
         begin
-          vagrant? ? '' : Config.host_plugin.get_environment(@host)
+          Config.host_plugin.get_environment(@host) || ''
         rescue => e
-          $stderr.puts "cannot get environment from host:#{@host}, #{e.class} #{e.message}"
+          $stderr.puts "cannot get environment for host:#{@host}, #{e.class} #{e.message}"
           ''
         end
     end
@@ -22,15 +22,16 @@ module Kondate
     def roles
       @roles ||=
         begin
-          vagrant? ? [] : Config.host_plugin.get_roles(@host)
+          Config.host_plugin.get_roles(@host) || []
         rescue => e
-          $stderr.puts "cannot get roles from host:#{@host}, #{e.class} #{e.message}"
+          $stderr.puts "cannot get roles for host:#{@host}, #{e.class} #{e.message}"
           []
         end
     end
 
     def filter_roles(filters)
-      filters = Array(filters).map {|role| role.gsub(':', '-') }
+      return self.roles if filters.nil? or filters.empty?
+      filters = Array(filters).map {|filter| filter.gsub(':', '-') }
       if roles.empty? # maybe, development (vagrant) env
         @roles = filters # append specified roles
         @roles.each do |role|
@@ -46,7 +47,7 @@ module Kondate
         end
         unless filters.empty?
           # filter out for production env
-          @roles = roles & filters
+          @roles = self.roles & filters
         end
       end
       @roles
@@ -98,7 +99,6 @@ module Kondate
         'environment' => environment,
         'role'        => role,
         'roles'       => roles,
-        'attributes'  => {},
       }).
       deep_merge!(environment_property).
       deep_merge!(secret_environment_property).
@@ -109,7 +109,6 @@ module Kondate
 
       # filter out the recipe
       if filter_recipes and !filter_recipes.empty?
-        filter_recipes << 'global'
         property['attributes'].keys.each do |key|
           property['attributes'].delete(key) unless filter_recipes.include?(key)
         end

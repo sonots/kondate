@@ -4,6 +4,9 @@ module Specinfra
       def attrs
         property['attributes']
       end
+      def global_attrs
+        property['global_attributes']
+      end
     end
   end
 end

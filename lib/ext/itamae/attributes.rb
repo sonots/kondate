@@ -5,6 +5,9 @@ module Itamae
       def attrs
         node[:attributes]
       end
+      def global_attrs
+        node[:global_attributes]
+      end
     end
   end
 end
@@ -16,6 +19,9 @@ module Itamae
       class EvalContext
         def attrs
           node[:attributes]
+        end
+        def global_attrs
+          node[:global_attributes]
         end
       end
     end
@@ -29,6 +35,9 @@ module Itamae
       class RenderContext
         def attrs
           node[:attributes]
+        end
+        def global_attrs
+          node[:global_attributes]
         end
       end
     end
