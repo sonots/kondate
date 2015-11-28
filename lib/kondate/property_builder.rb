@@ -12,9 +12,9 @@ module Kondate
     def environment
       @environment ||=
         begin
-          vagrant? ? '' : (Config.host_plugin.get_environment(@host) || '')
+          Config.host_plugin.get_environment(@host) || ''
         rescue => e
-          $stderr.puts "cannot get environment from host:#{@host}, #{e.class} #{e.message}"
+          $stderr.puts "cannot get environment for host:#{@host}, #{e.class} #{e.message}"
           ''
         end
     end
@@ -22,9 +22,9 @@ module Kondate
     def roles
       @roles ||=
         begin
-          vagrant? ? [] : (Config.host_plugin.get_roles(@host) || [])
+          Config.host_plugin.get_roles(@host) || []
         rescue => e
-          $stderr.puts "cannot get roles from host:#{@host}, #{e.class} #{e.message}"
+          $stderr.puts "cannot get roles for host:#{@host}, #{e.class} #{e.message}"
           []
         end
     end
