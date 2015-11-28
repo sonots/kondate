@@ -95,7 +95,6 @@ module Kondate
 
           ENV['TARGET_NODE_FILE'] = property_file
           recipes = YAML.load_file(property_file)['attributes'].keys.map {|recipe|
-            next if recipe == 'global'
             File.join(Config.middleware_recipes_serverspec_dir, recipe)
           }.compact
           recipes << File.join(Config.roles_recipes_serverspec_dir, role)
