@@ -109,8 +109,11 @@ module Kondate
 
     def build_property_files(host)
       builder = PropertyBuilder.new(host)
-      roles   = @options[:role] ? builder.filter_roles(@options[:role]) : builder.roles
-      $stderr.puts 'No role' and exit(1) if roles.empty?
+      roles   = builder.filter_roles(@options[:role])
+      if roles.nil? or roles.empty?
+        $stderr.puts 'No role'
+        exit(1)
+      end
       $stdout.puts "roles: [#{roles.join(', ')}]"
 
       property_files = {}
