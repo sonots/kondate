@@ -142,7 +142,7 @@ attributes:
   nginx:
 ```
 
-The attributes variables are accessible like `attrs['rbenv']['versions']` in recipes, which is equivalent and short version of `node['attributes']['rbenv']['versions']`.
+The attributes variables are accessible like `attrs['rbenv']['versions']`, which is equivalent and short version of `node['attributes']['rbenv']['versions']` in recipes.
 
 You can also prepare host-specific property files such as:
 
@@ -159,12 +159,11 @@ In addition, you can also prepare environment property files such as:
 properties/environments/development.yml
 
 ```
-attributes:
-  global:
-    aws_region: ap-northeast-1
+global_attributes:
+  aws_region: ap-northeast-1
 ```
 
-The `global` is a reserved name, the `global` is used to only store global attributes, and do not run `global` recipe.
+where `global_attributes` is accessible like `global_attrs['aws_region']`, which is equivalent and short version of `node['global_attributes']['aws_region']` in recipes.
 
 These files are merged on kondate execution in order of `environment` + `role` + `node` (`node` > `role` > `environment` in the strong order).
 

@@ -1,3 +1,10 @@
+# 0.1.4 (2015-11-29)
+
+Changes:
+
+* Define global_attributes instead of using attributes['global']
+* Let vagrant? to handle inside each host plugin
+
 # 0.1.3 (2015-11-26)
 
 Fixes:
