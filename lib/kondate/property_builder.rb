@@ -106,6 +106,7 @@ module Kondate
       deep_merge!(secret_role_property).
       deep_merge!(node_property).
       deep_merge!(secret_node_property).to_h
+      property['attributes'] ||= {}
 
       # filter out the recipe
       if filter_recipes and !filter_recipes.empty?
