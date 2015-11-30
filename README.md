@@ -240,10 +240,8 @@ because these ENVs are passed by `kondate serverspec`.
 
 Configuring following lines for vagrant is also recommended:
 
-```
+```ruby
   if ENV['TARGET_VAGRANT']
-    `vagrant up #{host}`
-
     config = Tempfile.new('', Dir.tmpdir)
     config.write(`vagrant ssh-config #{host}`)
     config.close
