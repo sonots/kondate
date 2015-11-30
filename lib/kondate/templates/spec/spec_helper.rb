@@ -22,7 +22,7 @@ else
 end
 
 options =
-  if %r{\Avagrant} === host
+  if ENV['TARGET_VAGRANT']
     `vagrant up #{host}`
 
     config = Tempfile.new('', Dir.tmpdir)

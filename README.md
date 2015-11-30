@@ -236,7 +236,23 @@ set :host, ENV['TARGET_HOST']
 set :set_property, YAML.load_file(ENV['TARGET_NODE_FILE'])
 ```
 
-because these ENVs are passed by `kondate serverspec`. 
+because these ENVs are passed by `kondate serverspec`.
+
+Configuring following lines for vagrant is also recommended:
+
+```
+  if ENV['TARGET_VAGRANT']
+    `vagrant up #{host}`
+
+    config = Tempfile.new('', Dir.tmpdir)
+    config.write(`vagrant ssh-config #{host}`)
+    config.close
+
+    Net::SSH::Config.for(host, [config.path])
+  else
+```
+
+`ENV['TARGET_VAGRANT']` is turned on if `kondate serverspec` is executed with `--vagrant` option.
 
 See [templates/spec/spec_helper.rb](./lib/kondate/templates/spec/spec_helper.rb) for an example.
 
@@ -313,8 +329,8 @@ vagrant up
 ```
 
 ```
-bundle exec exe/kondate itamae vagrant-centos --role sample
-bundle exec exe/kondate serverspec vagrant-centos --role sample
+bundle exec exe/kondate itamae vagrant-centos --vagrant --role sample
+bundle exec exe/kondate serverspec vagrant-centos --vagrant --role sample
 ```
 
 ## ToDo
