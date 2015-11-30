@@ -23,6 +23,8 @@ end
 
 options =
   if ENV['TARGET_VAGRANT']
+    `vagrant up #{host}`
+
     config = Tempfile.new('', Dir.tmpdir)
     config.write(`vagrant ssh-config #{host}`)
     config.close
