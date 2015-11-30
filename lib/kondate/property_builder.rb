@@ -122,9 +122,5 @@ module Kondate
         end.path
       end
     end
-
-    def vagrant?
-      %r{\Avagrant} === @host
-    end
   end
 end

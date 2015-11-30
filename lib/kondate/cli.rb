@@ -51,6 +51,7 @@ module Kondate
     option :recipe,                      :type => :array,   :default => []
     option :debug,   :aliases => ["-d"], :type => :boolean, :default => false
     option :confirm,                     :type => :boolean, :default => true
+    option :vagrant,                     :type => :boolean, :default => false
     def itamae(host)
       builder, property_files = build_property_files(host)
 
@@ -62,7 +63,7 @@ module Kondate
 
         properties = YAML.load_file(property_file)
 
-        if builder.vagrant?
+        if @options[:vagrant]
           command << " --vagrant"
         else
           config = Net::SSH::Config.for(host)
@@ -85,10 +86,12 @@ module Kondate
     option :recipe,                      :type => :array,   :default => []
     option :debug,   :aliases => ["-d"], :type => :boolean, :default => false
     option :confirm,                     :type => :boolean, :default => true
+    option :vagrant,                     :type => :boolean, :default => false
     def serverspec(host)
       builder, property_files = build_property_files(host)
 
       ENV['RUBYOPT'] = "-I #{Config.plugin_dir} -r bundler/setup -r ext/serverspec/kondate"
+      ENV['TARGET_VAGRANT'] = '1' if @options[:vagrant]
       property_files.each do |role, property_file|
         RSpec::Core::RakeTask.new([host, role].join(':'), :recipe) do |t, args|
           ENV['TARGET_HOST'] = host
