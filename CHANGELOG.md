@@ -1,3 +1,9 @@
+# 0.1.5 (2015-11-30)
+
+Changes:
+
+* Add --vagrant option, and stop judging vagrant or not via host name
+
 # 0.1.4 (2015-11-29)
 
 Changes:
