@@ -1,3 +1,9 @@
+# 0.1.6 (2015-11-30)
+
+Fixes:
+
+* Fix regression (avoid nil error) introduced in 0.1.4
+
 # 0.1.5 (2015-11-30)
 
 Changes:
