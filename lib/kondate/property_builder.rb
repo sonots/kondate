@@ -84,7 +84,10 @@ module Kondate
 
     # Generate tmp node file (for each role)
     #
-    #   role_file + secret_role_file + nod_file + node_secret_file + roles: @roles
+    #   { environment: environment, role: role, roles: roles } +
+    #   environment_file + secret_environment_file +
+    #   role_file + secret_role_file +
+    #   node_file + node_secret_file
     #
     # This file is automatically created and removed
     def install(role, filter_recipes = nil)
