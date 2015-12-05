@@ -132,17 +132,17 @@ properties/roles/#{role}.yml
 
 ```
 attributes:
-  rbenv:
+  ruby:
     versions: [2.2.3]
     gems:
       2.2.3: [bundler]
-  ndenv:
+  node:
     versions: [v0.12.2]
     global: v0.12.2
   nginx:
 ```
 
-The attributes variables are accessible like `attrs['rbenv']['versions']`, which is equivalent and short version of `node['attributes']['rbenv']['versions']` in recipes.
+The attributes variables are accessible like `attrs['ruby']['versions']`, which is equivalent and short version of `node['attributes']['ruby']['versions']` in recipes.
 
 You can also prepare host-specific property files such as:
 
