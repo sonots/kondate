@@ -30,7 +30,7 @@ module Kondate
       end
 
       def config_path
-        @config_path ||= opts[:config] || ENV['HOKKE_CONFIG_PATH'] || DEFAULT_CONFIG_PATH
+        @config_path ||= opts[:config] || ENV['KONDATE_CONFIG_PATH'] || DEFAULT_CONFIG_PATH
       end
 
       def kondate_directories
