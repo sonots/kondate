@@ -11,7 +11,7 @@ module Kondate
       # @param [String] host hostname
       # @return [String] environment name
       def get_environment(host)
-        ENV['ENVIRONMENT']
+        ENV['ENVIRONMENT'] || 'development'
       end
 
       # @param [String] host hostname
