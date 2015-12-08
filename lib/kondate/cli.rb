@@ -24,8 +24,8 @@ module Kondate
       Config.configure(@options)
     end
 
-    desc "generate [target_dir = .]", "Generate kondate directory tree template"
-    def generate(target_dir = '.')
+    desc "init [target_dir = .]", "Initialize kondate directory tree"
+    def init(target_dir = '.')
       Config.kondate_directories.each do |_, dir|
         $stdout.puts "mkdir -p #{File.join(target_dir, dir)}"
         FileUtils.mkdir_p(File.join(target_dir, dir)) unless @options[:dry_run]

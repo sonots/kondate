@@ -25,7 +25,7 @@ Or install it yourself as:
 Generate a template directory tree:
 
 ```
-$ bundle exec kondate generate [target_dir .]
+$ bundle exec kondate init [target_dir .]
 ```
 
 Run itamae:
@@ -42,7 +42,7 @@ $ bundle exec kondate serverspec <host>
 
 ## Configuration
 
-`kondate generate` provides a template directory tree such as:
+`kondate init` provides a template directory tree such as:
 
 ```
 .
@@ -330,7 +330,7 @@ host_plugin:
 ## Development
 
 ```
-bundle exec exe/kondate generate
+bundle exec exe/kondate init
 vagrant up
 ```
 
