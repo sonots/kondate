@@ -1,3 +1,9 @@
+# 0.1.8 (2015-12-09)
+
+Changes:
+
+* kondate generate => kondate init (as itamae init)
+
 # 0.1.7 (2015-12-06)
 
 Fixes:
