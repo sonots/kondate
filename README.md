@@ -327,6 +327,10 @@ host_plugin:
 
 `config.type` and `config.path` is available in the above config.
 
+## See Also
+
+* [Itamae meetup #1 で「ぼくのかんがえた Itamae/Serverspec 構成フレームワーク 〜 板前の献立 〜」というトークをしてきた](http://blog.livedoor.jp/sonots/archives/46245484.html) (Japanese)
+
 ## Development
 
 ```
