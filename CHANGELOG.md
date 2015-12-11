@@ -1,3 +1,10 @@
+# 0.1.9 (2015-12-11)
+
+Enhancments:
+
+* Support itamae --profile option
+* Support itamae --recipe-graph option
+
 # 0.1.8 (2015-12-09)
 
 Changes:
