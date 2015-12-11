@@ -52,6 +52,7 @@ module Kondate
     option :debug,   :aliases => ["-d"], :type => :boolean, :default => false
     option :confirm,                     :type => :boolean, :default => true
     option :vagrant,                     :type => :boolean, :default => false
+    option :profile,                     :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Save profiling data", :banner => "PATH"
     def itamae(host)
       builder, property_files = build_property_files(host)
 
@@ -75,6 +76,7 @@ module Kondate
         command << " -y #{property_file}"
         command << " -l=debug" if @options[:debug]
         command << " --dry-run" if @options[:dry_run]
+        command << " --profile=#{@options[:profile]}" if @options[:profile]
         command << " bootstrap.rb"
         $stdout.puts command
         exit(-1) unless system(command)
