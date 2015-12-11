@@ -53,6 +53,7 @@ module Kondate
     option :confirm,                     :type => :boolean, :default => true
     option :vagrant,                     :type => :boolean, :default => false
     option :profile,                     :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Save profiling data", :banner => "PATH"
+    option :recipe_graph,                :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Write recipe dependency graph in DOT", :banner => "PATH"
     def itamae(host)
       builder, property_files = build_property_files(host)
 
@@ -77,6 +78,7 @@ module Kondate
         command << " -l=debug" if @options[:debug]
         command << " --dry-run" if @options[:dry_run]
         command << " --profile=#{@options[:profile]}" if @options[:profile]
+        command << " --recipe-graph=#{@options[:recipe_graph]}" if @options[:recipe_graph]
         command << " bootstrap.rb"
         $stdout.puts command
         exit(-1) unless system(command)
