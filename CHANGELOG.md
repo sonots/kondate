@@ -1,3 +1,9 @@
+# 0.2.0 (2016-04-05)
+
+Enhancments:
+
+* Support arbitrary hostinfo by HostPlugin
+
 # 0.1.9 (2015-12-11)
 
 Enhancments:

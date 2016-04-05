@@ -280,7 +280,9 @@ plugin_dir: lib
 
 ### Interface
 
-What you have to implement are `#initialize`, `#get_environment`, and `#get_roles` methods. Here is an example of file plugin:
+What you have to implement are `#initialize`, `#get_environment`, and `#get_roles` methods.
+`get_hostinfo` method is an optional method to return arbitrary hostinfo of the host (available from kondate 0.2.0).
+Here is an example of file plugin:
 
 ```ruby
 require 'yaml'
@@ -309,6 +311,14 @@ module Kondate
       # @return [Array] array of roles
       def get_roles(host)
         YAML.load_file(@path)[host]
+      end
+
+      # Optional
+      #
+      # @param [String] host hostname
+      # @return [Hash] arbitrary hostinfo
+      def get_hostinfo(host)
+        {}
       end
     end
   end
