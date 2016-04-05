@@ -19,6 +19,12 @@ module Kondate
       def get_roles(host)
         raise NotImplementedError
       end
+
+      # @param [String] host hostname
+      # @return [Hash] arbitrary host information
+      # def get_hostinfo(host)
+      #   raise NotImplementedError
+      # end
     end
   end
 end

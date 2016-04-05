@@ -29,6 +29,20 @@ module Kondate
         end
     end
 
+    def hostinfo
+      @hostinfo ||=
+        begin
+          if Config.host_plugin.respond_to?(:get_hostinfo)
+            Config.host_plugin.get_hostinfo(@host) || {}
+          else
+            {}
+          end
+        rescue => e
+          $stderr.puts "cannot get hostinfo for host:#{@host}, #{e.class} #{e.message}"
+          {}
+        end
+    end
+
     def filter_roles(filters)
       return self.roles if filters.nil? or filters.empty?
       filters = Array(filters).map {|filter| filter.gsub(':', '-') }
@@ -102,6 +116,7 @@ module Kondate
         'environment' => environment,
         'role'        => role,
         'roles'       => roles,
+        'hostinfo'    => hostinfo,
       }).
       deep_merge!(environment_property).
       deep_merge!(secret_environment_property).
