@@ -1,3 +1,9 @@
+# 0.2.1 (2016-11-14)
+
+Fixes:
+
+* Resolve 'failed to load rake command' when kondate init (thanks to @mazgi)
+
 # 0.2.0 (2016-04-05)
 
 Enhancments:
