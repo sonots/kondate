@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+
+CMD = File.join(File.dirname(__FILE__), 'kondate')
+if ARGV.size == 0 || ARGV[0] == "-h" || ARGV[0] == "--help"
+  exec CMD, 'help', 'itamae-role'
+else
+  exec CMD, 'itamae-role', *ARGV
+end
