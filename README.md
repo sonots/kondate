@@ -50,12 +50,12 @@ $ bundle exec kondate serverspec <host>
 ├── bootstrap.rb      # itamae bootstrap
 ├── hosts.yml         # manages hostnames and its roles
 ├── properties        # manages run_lists and attributes
-│   ├── nodes         # host specific properties
+│   ├── nodes         # host specific properties (deprecated)
 │   ├── roles         # role properties
 │   └── environments  # environment properties
 ├── secrets           # manages secrets attributes such as passwords
 │   └── properties
-│       ├── nodes
+│       ├── nodes (deprecated)
 │       ├── roles
 │       └── environments
 ├── recipes           # itamae recipes
@@ -76,13 +76,13 @@ The default .kondate.conf looks like below:
 
 ```
 middlware_recipes_dir: recipes/middleware
-roles_recipes_dir: recipes/roles
+roles_recipes_dir: recipes/roles (deprecated)
 middleware_recipes_serverspec_dir: spec/middleware
 roles_recipes_serverspec_dir: spec/roles
-nodes_properties_dir: properties/nodes
+nodes_properties_dir: properties/nodes (deprecated)
 roles_properties_dir: properties/roles
 environments_properties_dir: properties/environments
-secret_nodes_properties_dir: secrets/properties/nodes
+secret_nodes_properties_dir: secrets/properties/nodes (deprecated)
 secret_roles_properties_dir: secrets/properties/roles
 secret_environments_properties_dir: secrets/properties/environments
 plugin_dir: lib
@@ -174,7 +174,7 @@ Secret properties are places to write confidential attributes.
 ```
 ├── secrets         # manages secrets attributes such as passwords
 │   └── properties
-│       ├── nodes
+│       ├── nodes (deprecated)
 │       ├── roles
 │       └── environments
 ```
@@ -258,7 +258,7 @@ See [templates/spec/spec_helper.rb](./lib/kondate/templates/spec/spec_helper.rb)
 
 ## Host Plugin
 
-The default reads `hosts.yml` to resolve roles of a host, but 
+The default reads `hosts.yml` to resolve roles of a host, but
 you may want to resolve roles from AWS EC2 `roles` tag, or
 you may want to resolve roles from your own host resolver API application.
 
@@ -299,6 +299,15 @@ module Kondate
         super
         raise ConfigError.new('file: path is not configured') unless config.path
         @path = config.path
+
+        @roles_of_hosts = YAML.load_file(@path)
+        @hosts_of_roles = {}
+        @roles_of_hosts.each do |host, roles|
+          roles.each do |role|
+            @hosts_of_roles[role] ||= []
+            @hosts_of_roles[role] << host
+          end
+        end
       end
 
       # @param [String] host hostname
@@ -310,7 +319,15 @@ module Kondate
       # @param [String] host hostname
       # @return [Array] array of roles
       def get_roles(host)
-        YAML.load_file(@path)[host]
+        @roles_of_hosts[host]
+      end
+
+      # @param [String] role role
+      # @return [Array] array of hosts
+      #
+      # Available from kondate >= 0.3.0
+      def get_hosts(role)
+        @hosts_of_roles[role]
       end
 
       # Optional

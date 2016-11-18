@@ -1,12 +1,13 @@
 require 'thor'
 require 'yaml'
 require 'net/ssh'
-require 'rspec/core/rake_task'
 require "highline/import"
 require_relative '../kondate'
 require 'fileutils'
 require 'shellwords'
 require 'find'
+require 'facter'
+require 'parallel'
 
 module Kondate
   class CLI < Thor
@@ -55,11 +56,83 @@ module Kondate
     option :profile,                     :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Save profiling data", :banner => "PATH"
     option :recipe_graph,                :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Write recipe dependency graph in DOT", :banner => "PATH"
     def itamae(host)
-      builder, property_files = build_property_files(host)
+      property_files = build_property_files(host)
+      if proceed?(property_files)
+        exit(-1) unless do_itamae(host, property_files)
+      end
+    end
 
+    desc "itamae-role <role>", "Execute itamae for multiple hosts in the role"
+    option :role,                         :type => :array,   :default => []
+    option :recipe,                       :type => :array,   :default => []
+    option :debug,   :aliases => ["-d"],  :type => :boolean, :default => false
+    option :confirm,                      :type => :boolean, :default => true
+    option :vagrant,                      :type => :boolean, :default => false
+    option :profile,                      :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Save profiling data", :banner => "PATH"
+    option :recipe_graph,                 :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Write recipe dependency graph in DOT", :banner => "PATH"
+    option :parallel, :aliases => ["-p"], :type => :numeric, :default => Facter['processorcount'].value.to_i 
+    def itamae_role(role)
+      $stdout.puts "Number of parallels is #{@options[:parallel]}"
+      hosts = Kondate::Config.host_plugin.get_hosts(role)
+      if hosts.nil? or hosts.empty?
+        $stderr.puts 'No host'
+        exit(1)
+      end
+      $stdout.puts "Target hosts are [#{hosts.join(", ")}]"
+
+      property_files_of_hosts, summarized_property_files, hosts_of_roles = build_property_files_of_hosts(hosts)
+      if proceed?(summarized_property_files, hosts_of_roles)
+        successes = Parallel.map(hosts, in_processes: @options[:parallel]) do |host|
+          do_itamae(host, property_files_of_hosts[host])
+        end
+        exit(-1) unless successes.all?
+      end
+    end
+
+    desc "serverspec <host>", "Execute serverspec"
+    option :role,                        :type => :array,   :default => []
+    option :recipe,                      :type => :array,   :default => []
+    option :debug,   :aliases => ["-d"], :type => :boolean, :default => false
+    option :confirm,                     :type => :boolean, :default => true
+    option :vagrant,                     :type => :boolean, :default => false
+    def serverspec(host)
+      property_files = build_property_files(host)
+      if proceed?(property_files)
+        exit(-1) unless do_serverspec(host, property_files)
+      end
+    end
+
+    desc "serverspec-role <role>", "Execute serverspec for multiple hosts in the role"
+    option :role,                         :type => :array,   :default => []
+    option :recipe,                       :type => :array,   :default => []
+    option :debug,   :aliases => ["-d"],  :type => :boolean, :default => false
+    option :confirm,                      :type => :boolean, :default => true
+    option :vagrant,                      :type => :boolean, :default => false
+    option :parallel, :aliases => ["-p"], :type => :numeric, :default => Facter['processorcount'].value.to_i 
+    def serverspec_role(role)
+      $stdout.puts "Number of parallels is #{@options[:parallel]}"
+      hosts = Kondate::Config.host_plugin.get_hosts(role)
+      if hosts.nil? or hosts.empty?
+        $stderr.puts 'No host'
+        exit(1)
+      end
+      $stdout.puts "Target hosts are [#{hosts.join(", ")}]"
+
+      property_files_of_hosts, summarized_property_files, hosts_of_roles = build_property_files_of_hosts(hosts)
+      if proceed?(summarized_property_files, hosts_of_roles)
+        successes = Parallel.map(hosts, in_processes: @options[:parallel]) do |host|
+          do_serverspec(host, property_files_of_hosts[host])
+        end
+        exit(-1) unless successes.all?
+      end
+    end
+
+    private
+
+    def do_itamae(host, property_files)
+      ENV['RUBYOPT'] = "-I #{Config.plugin_dir} -r bundler/setup -r ext/itamae/kondate"
       property_files.each do |role, property_file|
-        ENV['TARGET_HOST'] = host
-        ENV['RUBYOPT'] = "-I #{Config.plugin_dir} -r bundler/setup -r ext/itamae/kondate"
+        next if property_file.nil?
         command = "bundle exec itamae ssh"
         command << " -h #{host}"
 
@@ -81,70 +154,97 @@ module Kondate
         command << " --recipe-graph=#{@options[:recipe_graph]}" if @options[:recipe_graph]
         command << " bootstrap.rb"
         $stdout.puts command
-        exit(-1) unless system(command)
+        return false unless system(command)
       end
+      true
     end
 
-    desc "serverspec <host>", "Execute serverspec"
-    option :role,                        :type => :array,   :default => []
-    option :recipe,                      :type => :array,   :default => []
-    option :debug,   :aliases => ["-d"], :type => :boolean, :default => false
-    option :confirm,                     :type => :boolean, :default => true
-    option :vagrant,                     :type => :boolean, :default => false
-    def serverspec(host)
-      builder, property_files = build_property_files(host)
-
+    def do_serverspec(host, property_files)
       ENV['RUBYOPT'] = "-I #{Config.plugin_dir} -r bundler/setup -r ext/serverspec/kondate"
       ENV['TARGET_VAGRANT'] = '1' if @options[:vagrant]
       property_files.each do |role, property_file|
-        RSpec::Core::RakeTask.new([host, role].join(':'), :recipe) do |t, args|
-          ENV['TARGET_HOST'] = host
+        next if property_file.nil?
+        recipes = YAML.load_file(property_file)['attributes'].keys.map {|recipe|
+          File.join(Config.middleware_recipes_serverspec_dir, recipe)
+        }.compact
+        recipes << File.join(Config.roles_recipes_serverspec_dir, role)
+        spec_files = recipes.map {|recipe| "#{recipe}_spec.rb"}.select! {|spec| File.exist?(spec) }
 
-          ENV['TARGET_NODE_FILE'] = property_file
-          recipes = YAML.load_file(property_file)['attributes'].keys.map {|recipe|
-            File.join(Config.middleware_recipes_serverspec_dir, recipe)
-          }.compact
-          recipes << File.join(Config.roles_recipes_serverspec_dir, role)
-          t.pattern = '{' + recipes.join(',') + '}_spec.rb'
-        end
+        command = "TARGET_HOST=#{host.shellescape} TARGET_NODE_FILE=#{property_file.shellescape} bundle exec rspec"
+        command << " #{spec_files.map{|f| f.shellescape }.join(' ')}"
+        $stdout.puts command
+        return false unless system(command)
+      end
+      true
+    end
 
-        Rake::Task["#{host}:#{role}"].invoke(@options[:recipe])
+    def proceed?(property_files, hosts_of_roles = {})
+      print_property_files(property_files, hosts_of_roles)
+      if property_files.values.compact.empty?
+        $stderr.puts "Nothing to run"
+        false
+      elsif @options[:confirm]
+        prompt = ask "Proceed? (y/n):"
+        prompt == 'y'
+      else
+        true
       end
     end
 
-    private
-
-    def build_property_files(host)
-      builder = PropertyBuilder.new(host)
-      roles   = builder.filter_roles(@options[:role])
+    def print_property_files(property_files, hosts_of_roles = {})
+      roles = property_files.keys
       if roles.nil? or roles.empty?
         $stderr.puts 'No role'
-        exit(1)
+        return
       end
-      $stdout.puts "roles: [#{roles.join(', ')}]"
+      $stdout.puts "Show property files for roles: [#{roles.join(", ")}]"
+
+      property_files.each do |role, property_file|
+        hosts = hosts_of_roles[role]
+        if hosts.nil? # itamae
+          $stdout.print "Show property file for role: #{role}"
+        else # itamae_role
+          $stdout.print "Show representative property file for role: #{role}"
+          $stdout.print " [#{hosts.join(", ")}]"
+        end
+
+        if property_file
+          $stdout.puts
+          $stdout.puts mask_secrets(File.read(property_file))
+        else
+          $stdout.puts " (does not exist, skipped)"
+        end
+      end
+    end
+
+    # @return [Hash] key value pairs whoses keys are roles and values are path (or nil)
+    def build_property_files(host)
+      builder = PropertyBuilder.new(host)
+      roles = builder.filter_roles(@options[:role])
 
       property_files = {}
       roles.each do |role|
         if path = builder.install(role, @options[:recipe])
           property_files[role] = path
-          $stdout.puts "# #{role}"
-          $stdout.puts mask_secrets(File.read(path))
         else
-          $stdout.puts "# #{role} (no attribute, skipped)"
+          property_files[role] = nil
         end
       end
 
-      if property_files.empty?
-        $stderr.puts "Nothing to run"
-        exit(1)
-      end
+      property_files
+    end
 
-      if @options[:confirm]
-        prompt = ask "Proceed? (y/n):"
-        exit(0) unless prompt == 'y'
+    def build_property_files_of_hosts(hosts)
+      summarized_property_files = {}
+      property_files_of_hosts = {}
+      hosts_of_roles = {}
+      hosts.each do |host|
+        property_files = build_property_files(host)
+        property_files_of_hosts[host] = property_files
+        property_files.each {|role, path| summarized_property_files[role] ||= path }
+        property_files.each {|role, path| (hosts_of_roles[role] ||= []) << host }
       end
-
-      [builder, property_files]
+      [property_files_of_hosts, summarized_property_files, hosts_of_roles]
     end
 
     def mask_secrets(str)
