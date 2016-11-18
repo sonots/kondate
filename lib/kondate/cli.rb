@@ -228,7 +228,7 @@ module Kondate
           $stdout.puts
           $stdout.puts mask_secrets(File.read(property_file))
         else
-          $stdout.puts " (does not exist, skipped)"
+          $stdout.puts " (no attribute, skipped)"
         end
       end
     end
