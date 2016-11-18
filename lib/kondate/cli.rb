@@ -1,7 +1,6 @@
 require 'thor'
 require 'yaml'
 require 'net/ssh'
-require 'rspec/core/rake_task'
 require "highline/import"
 require_relative '../kondate'
 require 'fileutils'
@@ -160,23 +159,21 @@ module Kondate
       true
     end
 
-    # NOTE: this method is not thread-safe since it modifies ENV, need forking
     def do_serverspec(host, property_files)
       ENV['RUBYOPT'] = "-I #{Config.plugin_dir} -r bundler/setup -r ext/serverspec/kondate"
       ENV['TARGET_VAGRANT'] = '1' if @options[:vagrant]
       property_files.each do |role, property_file|
-        RSpec::Core::RakeTask.new([host, role].join(':'), :recipe) do |t, args|
-          ENV['TARGET_HOST'] = host
+        next if property_file.nil?
+        recipes = YAML.load_file(property_file)['attributes'].keys.map {|recipe|
+          File.join(Config.middleware_recipes_serverspec_dir, recipe)
+        }.compact
+        recipes << File.join(Config.roles_recipes_serverspec_dir, role)
+        spec_files = recipes.map {|recipe| "#{recipe}_spec.rb"}.select! {|spec| File.exist?(spec) }
 
-          ENV['TARGET_NODE_FILE'] = property_file
-          recipes = YAML.load_file(property_file)['attributes'].keys.map {|recipe|
-            File.join(Config.middleware_recipes_serverspec_dir, recipe)
-          }.compact
-          recipes << File.join(Config.roles_recipes_serverspec_dir, role)
-          t.pattern = '{' + recipes.join(',') + '}_spec.rb'
-        end
-
-        Rake::Task["#{host}:#{role}"].invoke(@options[:recipe])
+        command = "TARGET_HOST=#{host.shellescape} TARGET_NODE_FILE=#{property_file.shellescape} bundle exec rspec"
+        command << " #{spec_files.map{|f| f.shellescape }.join(' ')}"
+        $stdout.puts command
+        return false unless system(command)
       end
       true
     end
