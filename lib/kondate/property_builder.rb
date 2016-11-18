@@ -139,7 +139,7 @@ module Kondate
         fp = Tempfile.open("kondate_")
         YAML.dump(property, fp)
         fp.close
-        fp # should be removed when process finishes
+        fp.path # should be removed when process finishes
       end
     end
   end

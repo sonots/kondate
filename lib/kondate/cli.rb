@@ -135,7 +135,7 @@ module Kondate
         command = "bundle exec itamae ssh"
         command << " -h #{host}"
 
-        properties = YAML.load_file(property_file.path)
+        properties = YAML.load_file(property_file)
 
         if @options[:vagrant]
           command << " --vagrant"
@@ -146,7 +146,7 @@ module Kondate
           command << " -p #{properties['ssh_port'] || config[:port] || 22}"
         end
 
-        command << " -y #{property_file.path}"
+        command << " -y #{property_file}"
         command << " -l=debug" if @options[:debug]
         command << " --dry-run" if @options[:dry_run]
         command << " --profile=#{@options[:profile]}" if @options[:profile]
@@ -211,7 +211,7 @@ module Kondate
 
         if property_file
           $stdout.puts
-          $stdout.puts mask_secrets(File.read(property_file.path))
+          $stdout.puts mask_secrets(File.read(property_file))
         else
           $stdout.puts " (does not exist, skipped)"
         end
