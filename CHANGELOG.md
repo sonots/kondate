@@ -1,3 +1,9 @@
+# 0.3.0 (2016-11-18)
+
+Enhancements:
+
+* Add itamae-role and serverspec-role subcommands to run for multiple hosts in parallel
+
 # 0.2.1 (2016-11-14)
 
 Fixes:
