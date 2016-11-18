@@ -62,12 +62,12 @@ $ bundle exec kondate serverspec-role <role>
 ├── bootstrap.rb      # itamae bootstrap
 ├── hosts.yml         # manages hostnames and its roles
 ├── properties        # manages run_lists and attributes
-│   ├── nodes         # host specific properties (deprecated)
+│   ├── nodes         # host specific properties
 │   ├── roles         # role properties
 │   └── environments  # environment properties
 ├── secrets           # manages secrets attributes such as passwords
 │   └── properties
-│       ├── nodes (deprecated)
+│       ├── nodes
 │       ├── roles
 │       └── environments
 ├── recipes           # itamae recipes
@@ -88,13 +88,13 @@ The default .kondate.conf looks like below:
 
 ```
 middlware_recipes_dir: recipes/middleware
-roles_recipes_dir: recipes/roles (deprecated)
+roles_recipes_dir: recipes/roles
 middleware_recipes_serverspec_dir: spec/middleware
 roles_recipes_serverspec_dir: spec/roles
-nodes_properties_dir: properties/nodes (deprecated)
+nodes_properties_dir: properties/nodes
 roles_properties_dir: properties/roles
 environments_properties_dir: properties/environments
-secret_nodes_properties_dir: secrets/properties/nodes (deprecated)
+secret_nodes_properties_dir: secrets/properties/nodes
 secret_roles_properties_dir: secrets/properties/roles
 secret_environments_properties_dir: secrets/properties/environments
 plugin_dir: lib
@@ -186,7 +186,7 @@ Secret properties are places to write confidential attributes.
 ```
 ├── secrets         # manages secrets attributes such as passwords
 │   └── properties
-│       ├── nodes (deprecated)
+│       ├── nodes
 │       ├── roles
 │       └── environments
 ```
