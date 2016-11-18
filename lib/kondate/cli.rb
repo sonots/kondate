@@ -146,7 +146,8 @@ module Kondate
     private
 
     def do_itamae(host, property_files)
-      ENV['RUBYOPT'] = "-I #{Config.plugin_dir} -r bundler/setup -r ext/itamae/kondate"
+      env = {}
+      env['RUBYOPT'] = "-I #{Config.plugin_dir} -r bundler/setup -r ext/itamae/kondate"
       property_files.each do |role, property_file|
         next if property_file.nil?
         command = "bundle exec itamae ssh"
@@ -169,15 +170,16 @@ module Kondate
         command << " --profile=#{@options[:profile]}" if @options[:profile]
         command << " --recipe-graph=#{@options[:recipe_graph]}" if @options[:recipe_graph]
         command << " bootstrap.rb"
-        $stdout.puts command
-        return false unless system(command)
+        $stdout.puts "env #{env.map {|k, v| "#{k}=#{v.shellescape}" }.join(' ')} #{command}"
+        return false unless system(env, command)
       end
       true
     end
 
     def do_serverspec(host, property_files)
-      ENV['RUBYOPT'] = "-I #{Config.plugin_dir} -r bundler/setup -r ext/serverspec/kondate"
-      ENV['TARGET_VAGRANT'] = '1' if @options[:vagrant]
+      env = {}
+      env['TARGET_VAGRANT'] = '1' if @options[:vagrant]
+      env['RUBYOPT'] = "-I #{Config.plugin_dir} -r bundler/setup -r ext/serverspec/kondate"
       property_files.each do |role, property_file|
         next if property_file.nil?
         recipes = YAML.load_file(property_file)['attributes'].keys.map {|recipe|
@@ -186,10 +188,11 @@ module Kondate
         recipes << File.join(Config.roles_recipes_serverspec_dir, role)
         spec_files = recipes.map {|recipe| "#{recipe}_spec.rb"}.select! {|spec| File.exist?(spec) }
 
-        command = "TARGET_HOST=#{host.shellescape} TARGET_NODE_FILE=#{property_file.shellescape} bundle exec rspec"
-        command << " #{spec_files.map{|f| f.shellescape }.join(' ')}"
-        $stdout.puts command
-        return false unless system(command)
+        env['TARGET_HOST'] = host
+        env['TARGET_NODE_FILE'] = property_file
+        command = "bundle exec rspec #{spec_files.map{|f| f.shellescape }.join(' ')}"
+        $stdout.puts "env #{env.map {|k, v| "#{k}=#{v.shellescape}" }.join(' ')} #{command}"
+        return false unless system(env, command)
       end
       true
     end
