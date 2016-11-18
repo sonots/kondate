@@ -1,3 +1,9 @@
+# 0.3.1 (2016-11-18)
+
+Fixes:
+
+* Fix to remove temporary property files properly
+
 # 0.3.0 (2016-11-18)
 
 Enhancements:
