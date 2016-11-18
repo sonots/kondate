@@ -73,6 +73,7 @@ module Kondate
     option :recipe_graph,                 :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Write recipe dependency graph in DOT", :banner => "PATH"
     option :parallel, :aliases => ["-p"], :type => :numeric, :default => Facter['processorcount'].value.to_i 
     def itamae_role(role)
+      $stdout.puts "Number of parallels is #{@options[:parallel]}"
       hosts = Kondate::Config.host_plugin.get_hosts(role)
       if hosts.nil? or hosts.empty?
         $stderr.puts 'No host'
@@ -110,6 +111,7 @@ module Kondate
     option :vagrant,                      :type => :boolean, :default => false
     option :parallel, :aliases => ["-p"], :type => :numeric, :default => Facter['processorcount'].value.to_i 
     def serverspec_role(role)
+      $stdout.puts "Number of parallels is #{@options[:parallel]}"
       hosts = Kondate::Config.host_plugin.get_hosts(role)
       if hosts.nil? or hosts.empty?
         $stderr.puts 'No host'
