@@ -20,6 +20,14 @@ module Kondate
         raise NotImplementedError
       end
 
+      # @param [String] role role
+      # @return [Array] array of hosts
+      #
+      # Available from kondate >= 0.3.0
+      def get_hosts(role)
+        raise NotImplementedError
+      end
+
       # @param [String] host hostname
       # @return [Hash] arbitrary host information
       # def get_hostinfo(host)

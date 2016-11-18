@@ -7,6 +7,8 @@ require_relative '../kondate'
 require 'fileutils'
 require 'shellwords'
 require 'find'
+require 'facter'
+require 'parallel'
 
 module Kondate
   class CLI < Thor
@@ -55,33 +57,47 @@ module Kondate
     option :profile,                     :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Save profiling data", :banner => "PATH"
     option :recipe_graph,                :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Write recipe dependency graph in DOT", :banner => "PATH"
     def itamae(host)
-      builder, property_files = build_property_files(host)
+      property_files = build_property_files(host)
+      print_property_files(property_files)
+      if proceed?(property_files)
+        exit(-1) unless do_itamae(host, property_files)
+      end
+    end
 
-      property_files.each do |role, property_file|
-        ENV['TARGET_HOST'] = host
-        ENV['RUBYOPT'] = "-I #{Config.plugin_dir} -r bundler/setup -r ext/itamae/kondate"
-        command = "bundle exec itamae ssh"
-        command << " -h #{host}"
+    desc "itamae-role <role>", "Execute itamae for all hosts in the role"
+    option :role,                         :type => :array,   :default => []
+    option :recipe,                       :type => :array,   :default => []
+    option :debug,   :aliases => ["-d"],  :type => :boolean, :default => false
+    option :confirm,                      :type => :boolean, :default => true
+    option :vagrant,                      :type => :boolean, :default => false
+    option :profile,                      :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Save profiling data", :banner => "PATH"
+    option :recipe_graph,                 :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Write recipe dependency graph in DOT", :banner => "PATH"
+    option :parallel, :aliases => ["-p"], :type => :numeric, :default => Facter['processorcount'].value.to_i 
+    def itamae_role(role)
+      hosts = Kondate::Config.host_plugin.get_hosts(role)
+      if hosts.nil? or hosts.empty?
+        $stderr.puts 'No host'
+        exit(1)
+      end
+      $stdout.puts "Target hosts are [#{hosts.join(", ")}]"
 
-        properties = YAML.load_file(property_file)
+      hosts_of_roles = {}
+      summarized_property_files = {}
+      property_files_of_hosts = {}
+      hosts.each do |host|
+        property_files = build_property_files(host)
+        property_files_of_hosts[host] = property_files
+        property_files.each {|role, path| summarized_property_files[role] ||= path }
+        property_files.each {|role, _| (hosts_of_roles[role] ||= []) << host }
+      end
 
-        if @options[:vagrant]
-          command << " --vagrant"
-        else
-          config = Net::SSH::Config.for(host)
-          command << " -u #{properties['ssh_user'] || config[:user] || ENV['USER']}"
-          command << " -i #{(properties['ssh_keys'] || []).first || (config[:ssh_keys] || []).first || (File.exist?(File.expand_path('~/.ssh/id_dsa')) ? '~/.ssh/id_dsa' : '~/.ssh/id_rsa')}"
-          command << " -p #{properties['ssh_port'] || config[:port] || 22}"
+      print_property_files(summarized_property_files, hosts_of_roles)
+
+      if proceed?(summarized_property_files)
+        successes = Parallel.map(hosts, in_processes: @options[:parallel]) do |host|
+          do_itamae(host, property_files_of_hosts[host])
         end
-
-        command << " -y #{property_file}"
-        command << " -l=debug" if @options[:debug]
-        command << " --dry-run" if @options[:dry_run]
-        command << " --profile=#{@options[:profile]}" if @options[:profile]
-        command << " --recipe-graph=#{@options[:recipe_graph]}" if @options[:recipe_graph]
-        command << " bootstrap.rb"
-        $stdout.puts command
-        exit(-1) unless system(command)
+        exit(-1) unless successes.all?
       end
     end
 
@@ -92,7 +108,7 @@ module Kondate
     option :confirm,                     :type => :boolean, :default => true
     option :vagrant,                     :type => :boolean, :default => false
     def serverspec(host)
-      builder, property_files = build_property_files(host)
+      builder, property_files = build_property_files(host, @options)
 
       ENV['RUBYOPT'] = "-I #{Config.plugin_dir} -r bundler/setup -r ext/serverspec/kondate"
       ENV['TARGET_VAGRANT'] = '1' if @options[:vagrant]
@@ -114,37 +130,90 @@ module Kondate
 
     private
 
-    def build_property_files(host)
-      builder = PropertyBuilder.new(host)
-      roles   = builder.filter_roles(@options[:role])
+    def proceed?(property_files)
+      if property_files.values.compact.empty?
+        $stderr.puts "Nothing to run"
+        false
+      elsif @options[:confirm]
+        prompt = ask "Proceed? (y/n):"
+        prompt == 'y'
+      else
+        true
+      end
+    end
+
+    def print_property_files(property_files, hosts_of_roles = {})
+      roles = property_files.keys
       if roles.nil? or roles.empty?
         $stderr.puts 'No role'
-        exit(1)
+        return
       end
-      $stdout.puts "roles: [#{roles.join(', ')}]"
+      $stdout.puts "Show property files for roles: [#{roles.join(", ")}]"
+
+      property_files.each do |role, property_file|
+        hosts = hosts_of_roles[role]
+        if hosts.nil? # itamae
+          $stdout.print "Show property file for role: #{role}"
+        else # itamae_role
+          $stdout.print "Show representative property file for role: #{role}"
+          $stdout.print " [#{hosts.join(", ")}]"
+        end
+
+        if property_file
+          $stdout.puts
+          $stdout.puts mask_secrets(File.read(property_file.path))
+        else
+          $stdout.puts " (does not exist, skipped)"
+        end
+      end
+    end
+
+    # @return [Hash] key value pairs whoses keys are roles and values are path (or nil)
+    def build_property_files(host)
+      builder = PropertyBuilder.new(host)
+      roles = builder.filter_roles(@options[:role])
 
       property_files = {}
       roles.each do |role|
         if path = builder.install(role, @options[:recipe])
           property_files[role] = path
-          $stdout.puts "# #{role}"
-          $stdout.puts mask_secrets(File.read(path))
         else
-          $stdout.puts "# #{role} (no attribute, skipped)"
+          property_files[role] = nil
         end
       end
 
-      if property_files.empty?
-        $stderr.puts "Nothing to run"
-        exit(1)
-      end
+      property_files
+    end
 
-      if @options[:confirm]
-        prompt = ask "Proceed? (y/n):"
-        exit(0) unless prompt == 'y'
-      end
+    def do_itamae(host, property_files)
+      property_files.each do |role, property_file|
+        next if property_file.nil?
+        ENV['TARGET_HOST'] = host
+        ENV['RUBYOPT'] = "-I #{Config.plugin_dir} -r bundler/setup -r ext/itamae/kondate"
+        command = "bundle exec itamae ssh"
+        command << " -h #{host}"
 
-      [builder, property_files]
+        properties = YAML.load_file(property_file.path)
+
+        if @options[:vagrant]
+          command << " --vagrant"
+        else
+          config = Net::SSH::Config.for(host)
+          command << " -u #{properties['ssh_user'] || config[:user] || ENV['USER']}"
+          command << " -i #{(properties['ssh_keys'] || []).first || (config[:ssh_keys] || []).first || (File.exist?(File.expand_path('~/.ssh/id_dsa')) ? '~/.ssh/id_dsa' : '~/.ssh/id_rsa')}"
+          command << " -p #{properties['ssh_port'] || config[:port] || 22}"
+        end
+
+        command << " -y #{property_file.path}"
+        command << " -l=debug" if @options[:debug]
+        command << " --dry-run" if @options[:dry_run]
+        command << " --profile=#{@options[:profile]}" if @options[:profile]
+        command << " --recipe-graph=#{@options[:recipe_graph]}" if @options[:recipe_graph]
+        command << " bootstrap.rb"
+        $stdout.puts command
+        return false unless system(command)
+      end
+      true
     end
 
     def mask_secrets(str)

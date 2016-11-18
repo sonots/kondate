@@ -24,6 +24,8 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'thor'
   spec.add_dependency 'highline'
   spec.add_dependency "rake"
+  spec.add_dependency 'facter'
+  spec.add_dependency 'parallel'
 
   spec.add_development_dependency "bundler"
   spec.add_development_dependency "test-unit"
