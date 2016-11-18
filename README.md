@@ -40,6 +40,18 @@ Run serverspec:
 $ bundle exec kondate serverspec <host>
 ```
 
+Run itamae for multiple hosts of a given role in parallel:
+
+```
+$ bundle exec kondate itamae-role <role>
+```
+
+Run serverspec for multiple hosts of a given role in parallel:
+
+```
+$ bundle exec kondate serverspec-role <role>
+```
+
 ## Configuration
 
 `kondate init` provides a template directory tree such as:
