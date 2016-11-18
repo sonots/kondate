@@ -57,8 +57,12 @@ module Kondate
     option :recipe_graph,                :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Write recipe dependency graph in DOT", :banner => "PATH"
     def itamae(host)
       property_files = build_property_files(host)
-      if proceed?(property_files)
-        exit(-1) unless do_itamae(host, property_files)
+      begin
+        if proceed?(property_files)
+          exit(-1) unless do_itamae(host, property_files)
+        end
+      ensure
+        clean_property_files(property_files)
       end
     end
 
@@ -81,11 +85,15 @@ module Kondate
       $stdout.puts "Target hosts are [#{hosts.join(", ")}]"
 
       property_files_of_hosts, summarized_property_files, hosts_of_roles = build_property_files_of_hosts(hosts)
-      if proceed?(summarized_property_files, hosts_of_roles)
-        successes = Parallel.map(hosts, in_processes: @options[:parallel]) do |host|
-          do_itamae(host, property_files_of_hosts[host])
+      begin
+        if proceed?(summarized_property_files, hosts_of_roles)
+          successes = Parallel.map(hosts, in_processes: @options[:parallel]) do |host|
+            do_itamae(host, property_files_of_hosts[host])
+          end
+          exit(-1) unless successes.all?
         end
-        exit(-1) unless successes.all?
+      ensure
+        clean_property_files_of_hosts(property_files_of_hosts)
       end
     end
 
@@ -97,8 +105,12 @@ module Kondate
     option :vagrant,                     :type => :boolean, :default => false
     def serverspec(host)
       property_files = build_property_files(host)
-      if proceed?(property_files)
-        exit(-1) unless do_serverspec(host, property_files)
+      begin
+        if proceed?(property_files)
+          exit(-1) unless do_serverspec(host, property_files)
+        end
+      ensure
+        clean_property_files(property_files)
       end
     end
 
@@ -119,11 +131,15 @@ module Kondate
       $stdout.puts "Target hosts are [#{hosts.join(", ")}]"
 
       property_files_of_hosts, summarized_property_files, hosts_of_roles = build_property_files_of_hosts(hosts)
-      if proceed?(summarized_property_files, hosts_of_roles)
-        successes = Parallel.map(hosts, in_processes: @options[:parallel]) do |host|
-          do_serverspec(host, property_files_of_hosts[host])
+      begin
+        if proceed?(summarized_property_files, hosts_of_roles)
+          successes = Parallel.map(hosts, in_processes: @options[:parallel]) do |host|
+            do_serverspec(host, property_files_of_hosts[host])
+          end
+          exit(-1) unless successes.all?
         end
-        exit(-1) unless successes.all?
+      ensure
+        clean_property_files_of_hosts(property_files_of_hosts)
       end
     end
 
@@ -214,6 +230,18 @@ module Kondate
         else
           $stdout.puts " (does not exist, skipped)"
         end
+      end
+    end
+
+    def clean_property_files(property_files)
+      property_files.values.each do |file|
+        File.unlink(file) rescue nil
+      end
+    end
+
+    def clean_property_files_of_hosts(property_files_of_hosts)
+      property_files_of_hosts.values.each do |property_files|
+        clean_property_files(property_files)
       end
     end
 

@@ -136,10 +136,10 @@ module Kondate
       if property['attributes'].empty?
         nil
       else
-        fp = Tempfile.open("kondate_")
+        fp = Tempfile.create("kondate_")
         YAML.dump(property, fp)
         fp.close
-        fp.path # should be removed when process finishes
+        fp.path
       end
     end
   end
