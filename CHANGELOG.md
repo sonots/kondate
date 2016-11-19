@@ -1,3 +1,9 @@
+# 0.3.X
+
+Changes:
+
+* kondate init now requires a target_dir argument, not an option anymore
+
 # 0.3.2 (2016-11-18)
 
 Fixes:
