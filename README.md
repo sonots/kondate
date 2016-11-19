@@ -25,7 +25,7 @@ Or install it yourself as:
 Generate a template directory tree:
 
 ```
-$ bundle exec kondate init [target_dir .]
+$ bundle exec kondate init .
 ```
 
 Run itamae:
@@ -373,7 +373,7 @@ host_plugin:
 ## Development
 
 ```
-bundle exec exe/kondate init
+bundle exec exe/kondate init .
 vagrant up
 ```
 
