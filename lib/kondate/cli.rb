@@ -56,14 +56,7 @@ module Kondate
     option :profile,                     :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Save profiling data", :banner => "PATH"
     option :recipe_graph,                :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Write recipe dependency graph in DOT", :banner => "PATH"
     def itamae(host)
-      property_files = build_property_files(host)
-      begin
-        if proceed?(property_files)
-          exit(-1) unless do_itamae(host, property_files)
-        end
-      ensure
-        clean_property_files(property_files)
-      end
+      with_host(host) {|property_files| do_itamae(host, property_files) }
     end
 
     desc "itamae-role <role>", "Execute itamae for multiple hosts in the role"
@@ -76,25 +69,7 @@ module Kondate
     option :recipe_graph,                 :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Write recipe dependency graph in DOT", :banner => "PATH"
     option :parallel, :aliases => ["-p"], :type => :numeric, :default => Facter['processorcount'].value.to_i 
     def itamae_role(role)
-      $stdout.puts "Number of parallels is #{@options[:parallel]}"
-      hosts = Kondate::Config.host_plugin.get_hosts(role)
-      if hosts.nil? or hosts.empty?
-        $stderr.puts 'No host'
-        exit(1)
-      end
-      $stdout.puts "Target hosts are [#{hosts.join(", ")}]"
-
-      property_files_of_host, summarized_property_files, hosts_of_role = build_property_files_of_host(hosts)
-      begin
-        if proceed?(summarized_property_files, hosts_of_role)
-          successes = Parallel.map(hosts, in_processes: @options[:parallel]) do |host|
-            do_itamae(host, property_files_of_host[host])
-          end
-          exit(-1) unless successes.all?
-        end
-      ensure
-        clean_property_files_of_host(property_files_of_host)
-      end
+      with_role(role) {|host, property_files| do_itamae(host, property_files) }
     end
 
     desc "serverspec <host>", "Execute serverspec"
@@ -104,14 +79,7 @@ module Kondate
     option :confirm,                     :type => :boolean, :default => true
     option :vagrant,                     :type => :boolean, :default => false
     def serverspec(host)
-      property_files = build_property_files(host)
-      begin
-        if proceed?(property_files)
-          exit(-1) unless do_serverspec(host, property_files)
-        end
-      ensure
-        clean_property_files(property_files)
-      end
+      with_host(host) {|property_files| do_serverspec(host, property_files) }
     end
 
     desc "serverspec-role <role>", "Execute serverspec for multiple hosts in the role"
@@ -122,6 +90,24 @@ module Kondate
     option :vagrant,                      :type => :boolean, :default => false
     option :parallel, :aliases => ["-p"], :type => :numeric, :default => Facter['processorcount'].value.to_i 
     def serverspec_role(role)
+      with_role(role) {|host, property_files| do_serverspec(host, property_files) }
+    end
+
+    private
+
+    def with_host(host, &block)
+      property_files = build_property_files(host)
+      begin
+        print_property_files(property_files)
+        if proceed?(property_files)
+          exit(-1) unless yield(property_files)
+        end
+      ensure
+        clean_property_files(property_files)
+      end
+    end
+
+    def with_role(role, &block)
       $stdout.puts "Number of parallels is #{@options[:parallel]}"
       hosts = Kondate::Config.host_plugin.get_hosts(role)
       if hosts.nil? or hosts.empty?
@@ -132,18 +118,17 @@ module Kondate
 
       property_files_of_host, summarized_property_files, hosts_of_role = build_property_files_of_host(hosts)
       begin
-        if proceed?(summarized_property_files, hosts_of_role)
+        print_property_files(summarized_property_files, hosts_of_role)
+        if proceed?(summarized_property_files)
           successes = Parallel.map(hosts, in_processes: @options[:parallel]) do |host|
-            do_serverspec(host, property_files_of_host[host])
+            yield(host, property_files_of_host[host])
           end
           exit(-1) unless successes.all?
         end
       ensure
-        clean_property_files_of_host(property_files_of_host)
+        property_files_of_host.values.each {|property_files| clean_property_files(property_files) }
       end
     end
-
-    private
 
     def do_itamae(host, property_files)
       env = {}
@@ -197,8 +182,7 @@ module Kondate
       true
     end
 
-    def proceed?(property_files, hosts_of_role = {})
-      print_property_files(property_files, hosts_of_role)
+    def proceed?(property_files)
       if property_files.values.compact.empty?
         $stderr.puts "Nothing to run"
         false
@@ -239,12 +223,6 @@ module Kondate
     def clean_property_files(property_files)
       property_files.values.each do |file|
         File.unlink(file) rescue nil
-      end
-    end
-
-    def clean_property_files_of_host(property_files_of_host)
-      property_files_of_host.values.each do |property_files|
-        clean_property_files(property_files)
       end
     end
 
