@@ -84,16 +84,16 @@ module Kondate
       end
       $stdout.puts "Target hosts are [#{hosts.join(", ")}]"
 
-      property_files_of_hosts, summarized_property_files, hosts_of_roles = build_property_files_of_hosts(hosts)
+      property_files_of, summarized_property_files, hosts_of = build_property_files_of(hosts)
       begin
-        if proceed?(summarized_property_files, hosts_of_roles)
+        if proceed?(summarized_property_files, hosts_of)
           successes = Parallel.map(hosts, in_processes: @options[:parallel]) do |host|
-            do_itamae(host, property_files_of_hosts[host])
+            do_itamae(host, property_files_of[host])
           end
           exit(-1) unless successes.all?
         end
       ensure
-        clean_property_files_of_hosts(property_files_of_hosts)
+        property_files_of.values.each {|property_files| clean_property_files(property_files) }
       end
     end
 
@@ -130,16 +130,16 @@ module Kondate
       end
       $stdout.puts "Target hosts are [#{hosts.join(", ")}]"
 
-      property_files_of_hosts, summarized_property_files, hosts_of_roles = build_property_files_of_hosts(hosts)
+      property_files_of, summarized_property_files, hosts_of = build_property_files_of(hosts)
       begin
-        if proceed?(summarized_property_files, hosts_of_roles)
+        if proceed?(summarized_property_files, hosts_of)
           successes = Parallel.map(hosts, in_processes: @options[:parallel]) do |host|
-            do_serverspec(host, property_files_of_hosts[host])
+            do_serverspec(host, property_files_of[host])
           end
           exit(-1) unless successes.all?
         end
       ensure
-        clean_property_files_of_hosts(property_files_of_hosts)
+        property_files_of.values.each {|files| clean_property_files(files) }
       end
     end
 
@@ -197,8 +197,8 @@ module Kondate
       true
     end
 
-    def proceed?(property_files, hosts_of_roles = {})
-      print_property_files(property_files, hosts_of_roles)
+    def proceed?(property_files, hosts_of = {})
+      print_property_files(property_files, hosts_of)
       if property_files.values.compact.empty?
         $stderr.puts "Nothing to run"
         false
@@ -210,7 +210,7 @@ module Kondate
       end
     end
 
-    def print_property_files(property_files, hosts_of_roles = {})
+    def print_property_files(property_files, hosts_of = {})
       roles = property_files.keys
       if roles.nil? or roles.empty?
         $stderr.puts 'No role'
@@ -219,7 +219,7 @@ module Kondate
       $stdout.puts "Show property files for roles: [#{roles.join(", ")}]"
 
       property_files.each do |role, property_file|
-        hosts = hosts_of_roles[role]
+        hosts = hosts_of[role]
         if hosts.nil? # itamae
           $stdout.print "Show property file for role: #{role}"
         else # itamae_role
@@ -242,12 +242,6 @@ module Kondate
       end
     end
 
-    def clean_property_files_of_hosts(property_files_of_hosts)
-      property_files_of_hosts.values.each do |property_files|
-        clean_property_files(property_files)
-      end
-    end
-
     # @return [Hash] key value pairs whoses keys are roles and values are path (or nil)
     def build_property_files(host)
       builder = PropertyBuilder.new(host)
@@ -265,17 +259,17 @@ module Kondate
       property_files
     end
 
-    def build_property_files_of_hosts(hosts)
+    def build_property_files_of(hosts)
       summarized_property_files = {}
-      property_files_of_hosts = {}
-      hosts_of_roles = {}
+      property_files_of = {}
+      hosts_of = {}
       hosts.each do |host|
         property_files = build_property_files(host)
-        property_files_of_hosts[host] = property_files
+        property_files_of[host] = property_files
         property_files.each {|role, path| summarized_property_files[role] ||= path }
-        property_files.each {|role, path| (hosts_of_roles[role] ||= []) << host }
+        property_files.each {|role, path| (hosts_of[role] ||= []) << host }
       end
-      [property_files_of_hosts, summarized_property_files, hosts_of_roles]
+      [property_files_of, summarized_property_files, hosts_of]
     end
 
     def mask_secrets(str)

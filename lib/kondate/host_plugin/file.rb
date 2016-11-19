@@ -13,12 +13,12 @@ module Kondate
         raise ConfigError.new('file: path is not configured') unless config.path
         @path = config.path
 
-        @roles_of_hosts = YAML.load_file(@path)
-        @hosts_of_roles = {}
-        @roles_of_hosts.each do |host, roles|
+        @roles_of = YAML.load_file(@path)
+        @hosts_of = {}
+        @roles_of.each do |host, roles|
           roles.each do |role|
-            @hosts_of_roles[role] ||= []
-            @hosts_of_roles[role] << host
+            @hosts_of[role] ||= []
+            @hosts_of[role] << host
           end
         end
       end
@@ -32,7 +32,7 @@ module Kondate
       # @param [String] host hostname
       # @return [Array] array of roles
       def get_roles(host)
-        @roles_of_hosts[host]
+        @roles_of[host]
       end
 
       # @param [String] role role
@@ -40,7 +40,7 @@ module Kondate
       #
       # Available from kondate >= 0.3.0
       def get_hosts(role)
-        @hosts_of_roles[role]
+        @hosts_of[role]
       end
     end
   end
