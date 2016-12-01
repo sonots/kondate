@@ -1,3 +1,9 @@
+# 0.4.2 (2016-12-01)
+
+Enhancements:
+
+* Support secret recipes and spec files
+
 # 0.4.1 (2016-12-01)
 
 Fixes:
