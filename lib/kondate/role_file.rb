@@ -54,7 +54,7 @@ module Kondate
         roles << "#{last}-base"
         roles << "#{last}-#{part}"
       end
-      roles
+      roles.reverse!
     end
   end
 end
