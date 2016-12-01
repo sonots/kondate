@@ -268,6 +268,28 @@ Configuring following lines for vagrant is also recommended:
 
 See [templates/spec/spec_helper.rb](./lib/kondate/templates/spec/spec_helper.rb) for an example.
 
+### Exploring role files
+
+Available version: >= v0.4.0
+
+Assume `role` is delimited with `-` (you can configure the delimiter) such as `myapp-web-staging`, this feature explores role files in order of:
+
+1. myapp-web-staging.yml
+1. myapp-web-base.yml
+1. myapp-web.yml
+1. myapp-base.yml
+1. myapp.yml
+1. base.yml
+
+This makes it possible to share a property file, for example, `myapp-web.yml` among `myapp-web-staging` and `myapp-web-production` roles.
+
+To enable this feature, you need to configure .kondate.conf as:
+
+```
+explore_role_files: true # default is false
+role_delimiter: "-" # default is -
+```
+
 ## Host Plugin
 
 The default reads `hosts.yml` to resolve roles of a host, but

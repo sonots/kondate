@@ -1,5 +1,6 @@
 require 'yaml'
 require 'tempfile'
+require_relative 'property_file'
 
 module Kondate
   class PropertyBuilder
@@ -49,8 +50,9 @@ module Kondate
       if roles.empty? # maybe, development (vagrant) env
         @roles = filters # append specified roles
         @roles.each do |role|
-          unless File.exist?(role_file(role))
-            $stderr.puts "#{role_file(role)} does not exist, possibly typo?"
+          file = role_file(role)
+          unless File.exist?(file)
+            $stderr.puts "#{file} does not exist, possibly typo?"
             exit(1)
           end
         end
@@ -76,11 +78,11 @@ module Kondate
     end
 
     def role_file(role)
-      File.join(Config.roles_properties_dir, "#{role}.yml")
+      RoleFile.explore(Config.roles_properties_dir, role, ".yml")
     end
 
     def secret_role_file(role)
-      File.join(Config.secret_roles_properties_dir, "#{role}.yml")
+      RoleFile.explore(Config.secret_roles_properties_dir, role, ".yml")
     end
 
     def environment_file(environment)
@@ -105,25 +107,24 @@ module Kondate
     #
     # This file is automatically created and removed
     def install(role, filter_recipes = nil)
-      node_property               = get_content(node_file)
-      secret_node_property        = get_content(secret_node_file)
-      role_property               = get_content(role_file(role))
-      secret_role_property        = get_content(secret_role_file(role))
-      environment_property        = get_content(environment_file(environment))
-      secret_environment_property = get_content(secret_environment_file(environment))
+      files = [
+        environment_file(environment),
+        secret_environment_file(environment),
+        role_file(role),
+        secret_role_file(role),
+        node_file,
+        secret_node_file,
+      ].compact.select {|f| File.readable?(f) }
 
       property = HashExt.new.deep_merge!({
         'environment' => environment,
         'role'        => role,
         'roles'       => roles,
         'hostinfo'    => hostinfo,
-      }).
-      deep_merge!(environment_property).
-      deep_merge!(secret_environment_property).
-      deep_merge!(role_property).
-      deep_merge!(secret_role_property).
-      deep_merge!(node_property).
-      deep_merge!(secret_node_property).to_h
+      })
+      files.each do |file|
+        property.deep_merge!(get_content(file))
+      end
       property['attributes'] ||= {}
 
       # filter out the recipe
@@ -137,9 +138,9 @@ module Kondate
         nil
       else
         fp = Tempfile.create("kondate_")
-        YAML.dump(property, fp)
+        YAML.dump(property.to_h, fp)
         fp.close
-        fp.path
+        PropertyFile.new(fp.path, files)
       end
     end
   end

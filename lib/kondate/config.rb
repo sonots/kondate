@@ -88,6 +88,14 @@ module Kondate
         config[:secret_environments_properties_dir] || 'secrets/properties/environments'
       end
 
+      def explore_role_files?
+        !config[:explore_role_files].nil?
+      end
+
+      def role_delimiter
+        config[:role_delimiter] || '-'
+      end
+
       def plugin_dir
         File.expand_path(config[:plugin_dir] || 'lib')
       end
