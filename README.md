@@ -85,7 +85,8 @@ $ bundle exec kondate serverspec-role <role>
 │   │   └── roles
 │   └── spec
 │       ├── middleware
-│       └── roles```
+│       └── roles
+```
 
 ### .kondate.conf
 
