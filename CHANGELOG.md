@@ -1,3 +1,9 @@
+# 0.4.3 (2016-12-02)
+
+Fixes:
+
+* Fixe nil error
+
 # 0.4.2 (2016-12-01)
 
 Enhancements:
