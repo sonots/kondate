@@ -1,3 +1,9 @@
+# 0.4.1 (2016-12-01)
+
+Fixes:
+
+* The order of exploring possible role files was opposite
+
 # 0.4.0 (2016-12-01)
 
 Enhancements:
