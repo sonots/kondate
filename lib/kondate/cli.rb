@@ -138,7 +138,7 @@ module Kondate
         command = "bundle exec itamae ssh"
         command << " -h #{host}"
 
-        properties = YAML.load_file(property_file)
+        properties = property_file.load
 
         if @options[:vagrant]
           command << " --vagrant"
@@ -149,7 +149,7 @@ module Kondate
           command << " -p #{properties['ssh_port'] || config[:port] || 22}"
         end
 
-        command << " -y #{property_file}"
+        command << " -y #{property_file.path}"
         command << " -l=debug" if @options[:debug]
         command << " --dry-run" if @options[:dry_run]
         command << " --profile=#{@options[:profile]}" if @options[:profile]
@@ -167,14 +167,14 @@ module Kondate
       env['RUBYOPT'] = "-I #{Config.plugin_dir} -r bundler/setup -r ext/serverspec/kondate"
       property_files.each do |role, property_file|
         next if property_file.nil?
-        recipes = YAML.load_file(property_file)['attributes'].keys.map {|recipe|
-          File.join(Config.middleware_recipes_serverspec_dir, recipe)
+        spec_files = property_file.load['attributes'].keys.map {|recipe|
+          File.join(Config.middleware_recipes_serverspec_dir, "#{recipe}_spec.rb")
         }.compact
-        recipes << File.join(Config.roles_recipes_serverspec_dir, role)
-        spec_files = recipes.map {|recipe| "#{recipe}_spec.rb"}.select! {|spec| File.exist?(spec) }
+        spec_files << RoleFile.explore(Config.roles_recipes_serverspec_dir, role, "_spec.rb")
+        spec_files.select! {|spec| File.exist?(spec) }
 
         env['TARGET_HOST'] = host
-        env['TARGET_NODE_FILE'] = property_file
+        env['TARGET_NODE_FILE'] = property_file.path
         command = "bundle exec rspec #{spec_files.map{|f| f.shellescape }.join(' ')}"
         $stdout.puts "env #{env.map {|k, v| "#{k}=#{v.shellescape}" }.join(' ')} #{command}"
         return false unless system(env, command)
@@ -208,12 +208,13 @@ module Kondate
           $stdout.print "Show property file for role: #{role}"
         else # itamae_role
           $stdout.print "Show representative property file for role: #{role}"
-          $stdout.print " [#{hosts.join(", ")}]"
+          $stdout.print " hosts: [#{hosts.join(", ")}]"
         end
+        $stdout.print ", sources: #{property_file.source_files}"
 
         if property_file
           $stdout.puts
-          $stdout.puts mask_secrets(File.read(property_file))
+          $stdout.puts property_file.read
         else
           $stdout.puts " (no attribute, skipped)"
         end
@@ -233,8 +234,8 @@ module Kondate
 
       property_files = {}
       roles.each do |role|
-        if path = builder.install(role, @options[:recipe])
-          property_files[role] = path
+        if property_file = builder.install(role, @options[:recipe])
+          property_files[role] = property_file
         else
           property_files[role] = nil
         end
@@ -250,15 +251,10 @@ module Kondate
       hosts.each do |host|
         property_files = build_property_files(host)
         property_files_of_host[host] = property_files
-        property_files.each {|role, path| summarized_property_files[role] ||= path }
-        property_files.each {|role, path| (hosts_of_role[role] ||= []) << host }
+        property_files.each {|role, property_file| summarized_property_files[role] ||= property_file }
+        property_files.each {|role, property_file| (hosts_of_role[role] ||= []) << host }
       end
       [property_files_of_host, summarized_property_files, hosts_of_role]
-    end
-
-    def mask_secrets(str)
-      str.gsub(/(.*key[^:]*): (.*)$/, '\1: *******').
-        gsub(/(.*password[^:]*): (.*)$/, '\1: *******')
     end
   end
 end
