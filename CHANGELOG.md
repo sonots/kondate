@@ -1,3 +1,9 @@
+# 0.4.0 (2016-12-01)
+
+Enhancements:
+
+* Add a feature to explore possible role files
+
 # 0.3.3 (2016-11-20)
 
 Changes:
