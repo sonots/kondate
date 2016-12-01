@@ -17,6 +17,10 @@ module Kondate
       YAML.load_file(path)
     end
 
+    def empty?
+      @path.nil?
+    end
+
     private
 
     def mask_secrets(str)

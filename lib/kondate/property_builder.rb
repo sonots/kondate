@@ -135,7 +135,7 @@ module Kondate
       end
 
       if property['attributes'].empty?
-        nil
+        PropertyFile.new(nil, files)
       else
         fp = Tempfile.create("kondate_")
         YAML.dump(property.to_h, fp)

@@ -134,7 +134,7 @@ module Kondate
       env = {}
       env['RUBYOPT'] = "-I #{Config.plugin_dir} -r bundler/setup -r ext/itamae/kondate"
       property_files.each do |role, property_file|
-        next if property_file.nil?
+        next if property_file.empty?
         command = "bundle exec itamae ssh"
         command << " -h #{host}"
 
@@ -166,7 +166,7 @@ module Kondate
       env['TARGET_VAGRANT'] = '1' if @options[:vagrant]
       env['RUBYOPT'] = "-I #{Config.plugin_dir} -r bundler/setup -r ext/serverspec/kondate"
       property_files.each do |role, property_file|
-        next if property_file.nil?
+        next if property_file.empty?
         spec_files = property_file.load['attributes'].keys.map {|recipe|
           secret_spec_file = File.join(Config.secret_middleware_recipes_serverspec_dir, "#{recipe}_spec.rb")
           spec_file = File.join(Config.middleware_recipes_serverspec_dir, "#{recipe}_spec.rb")
@@ -187,7 +187,7 @@ module Kondate
     end
 
     def proceed?(property_files)
-      if property_files.values.compact.empty?
+      if property_files.values.compact.reject(&:empty?).empty?
         $stderr.puts "Nothing to run"
         false
       elsif @options[:confirm]
@@ -216,11 +216,11 @@ module Kondate
         end
         $stdout.print ", sources: #{property_file.source_files}"
 
-        if property_file
+        if property_file.empty?
+          $stdout.puts " (no attribute, skipped)"
+        else
           $stdout.puts
           $stdout.puts property_file.read
-        else
-          $stdout.puts " (no attribute, skipped)"
         end
       end
     end
@@ -238,11 +238,7 @@ module Kondate
 
       property_files = {}
       roles.each do |role|
-        if property_file = builder.install(role, @options[:recipe])
-          property_files[role] = property_file
-        else
-          property_files[role] = nil
-        end
+        property_files[role] = builder.install(role, @options[:recipe])
       end
 
       property_files
