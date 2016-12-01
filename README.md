@@ -65,11 +65,6 @@ $ bundle exec kondate serverspec-role <role>
 │   ├── nodes         # host specific properties
 │   ├── roles         # role properties
 │   └── environments  # environment properties
-├── secrets           # manages secrets attributes such as passwords
-│   └── properties
-│       ├── nodes
-│       ├── roles
-│       └── environments
 ├── recipes           # itamae recipes
 │   ├── middleware    # middleware recipes
 │   │   └── base
@@ -80,7 +75,17 @@ $ bundle exec kondate serverspec-role <role>
     │   └── base_spec.rb
     ├─  roles         # role recipes specs
     └── spec_helper.rb
-```
+├── secrets           # manages secrets attributes such as passwords
+│   ├── properties
+│   │   ├── environments
+│   │   ├── nodes
+│   │   └── roles
+│   ├── recipes
+│   │   ├── middleware
+│   │   └── roles
+│   └── spec
+│       ├── middleware
+│       └── roles```
 
 ### .kondate.conf
 
@@ -94,6 +99,10 @@ roles_recipes_serverspec_dir: spec/roles
 nodes_properties_dir: properties/nodes
 roles_properties_dir: properties/roles
 environments_properties_dir: properties/environments
+secret_middlware_recipes_dir: secrets/recipes/middleware
+secret_roles_recipes_dir: secrets/recipes/roles
+secret_middleware_recipes_serverspec_dir: secrets/spec/middleware
+secret_roles_recipes_serverspec_dir: secrets/spec/roles
 secret_nodes_properties_dir: secrets/properties/nodes
 secret_roles_properties_dir: secrets/properties/roles
 secret_environments_properties_dir: secrets/properties/environments

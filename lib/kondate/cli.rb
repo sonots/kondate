@@ -168,9 +168,13 @@ module Kondate
       property_files.each do |role, property_file|
         next if property_file.nil?
         spec_files = property_file.load['attributes'].keys.map {|recipe|
-          File.join(Config.middleware_recipes_serverspec_dir, "#{recipe}_spec.rb")
+          secret_spec_file = File.join(Config.secret_middleware_recipes_serverspec_dir, "#{recipe}_spec.rb")
+          spec_file = File.join(Config.middleware_recipes_serverspec_dir, "#{recipe}_spec.rb")
+          File.exist?(secret_spec_file) ? secret_spec_file : spec_file
         }.compact
-        spec_files << RoleFile.explore(Config.roles_recipes_serverspec_dir, role, "_spec.rb")
+        secret_role_spec_file = RoleFile.explore(Config.secret_roles_recipes_serverspec_dir, role, "_spec.rb")
+        role_spec_file = RoleFile.explore(Config.roles_recipes_serverspec_dir, role, "_spec.rb")
+        spec_files << (File.exist?(secret_role_spec_file) ? secret_role_spec_file : role_spec_file)
         spec_files.select! {|spec| File.exist?(spec) }
 
         env['TARGET_HOST'] = host

@@ -42,6 +42,10 @@ module Kondate
           'nodes_properties_dir' => nodes_properties_dir,
           'roles_properties_dir' => roles_properties_dir,
           'environments_properties_dir' => environments_properties_dir,
+          'secret_middleware_recipes_dir' => secret_middleware_recipes_dir,
+          'secret_roles_recipes_dir' => secret_roles_recipes_dir,
+          'secret_middleware_recipes_serverspec_dir' => secret_middleware_recipes_serverspec_dir,
+          'secret_roles_recipes_serverspec_dir' => secret_roles_recipes_serverspec_dir,
           'secret_nodes_properties_dir' => secret_nodes_properties_dir,
           'secret_roles_properties_dir' => secret_roles_properties_dir,
           'secret_environments_properties_dir' => secret_environments_properties_dir,
@@ -74,6 +78,22 @@ module Kondate
 
       def environments_properties_dir
         config[:environments_properties_dir] || 'properties/environments'
+      end
+
+      def secret_middleware_recipes_dir
+        config[:secret_middleware_recipes_dir] || 'secrets/recipes/middleware'
+      end
+
+      def secret_roles_recipes_dir
+        config[:secret_roles_recipes_dir] || 'secrets/recipes/roles'
+      end
+
+      def secret_middleware_recipes_serverspec_dir
+        config[:secret_middleware_recipes_serverspec_dir] || 'secrets/spec/middleware'
+      end
+
+      def secret_roles_recipes_serverspec_dir
+        config[:secret_roles_recipes_serverspec_dir] || 'secrets/spec/roles'
       end
 
       def secret_nodes_properties_dir
