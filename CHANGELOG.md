@@ -1,3 +1,9 @@
+# 0.4.4 (2016-12-02)
+
+Changes:
+
+* Prepare `Kondate::ItamaeBootstrap.bootstrap(context)`. Now, bootstrap.rb should just call it.
+
 # 0.4.3 (2016-12-02)
 
 Fixes:
