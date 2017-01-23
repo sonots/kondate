@@ -1,3 +1,9 @@
+# 0.4.5 (2017-01-23)
+
+Fixes:
+
+* Remove tempfile created
+
 # 0.4.4 (2016-12-02)
 
 Changes:
