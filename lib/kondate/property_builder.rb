@@ -140,6 +140,9 @@ module Kondate
         fp = Tempfile.create("kondate_")
         YAML.dump(property.to_h, fp)
         fp.close
+        at_exit do
+          File.unlink(fp.path) rescue nil
+        end
         PropertyFile.new(fp.path, files)
       end
     end
