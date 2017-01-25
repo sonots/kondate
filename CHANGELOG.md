@@ -1,3 +1,9 @@
+# 0.4.6 (2017-01-25)
+
+Enhancements:
+
+* Mask private rsa key
+
 # 0.4.5 (2017-01-23)
 
 Fixes:
