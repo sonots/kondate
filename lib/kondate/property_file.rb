@@ -25,7 +25,8 @@ module Kondate
 
     def mask_secrets(str)
       str.gsub(/(.*key[^:]*): (.*)$/, '\1: *******').
-        gsub(/(.*password[^:]*): (.*)$/, '\1: *******')
+        gsub(/(.*password[^:]*): (.*)$/, '\1: *******').
+        gsub(/(-----BEGIN\s+PRIVATE\s+KEY-----)[0-9A-Za-z+\/=\s\\]+(-----END\s+PRIVATE\s+KEY-----)/m, '\1 xxxxx \2')
     end
   end
 end
