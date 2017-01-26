@@ -1,3 +1,9 @@
+# 0.4.7 (2017-01-26)
+
+Fixes:
+
+* Revert 0.4.5 to avoid No such file or directory ...
+
 # 0.4.6 (2017-01-25)
 
 Enhancements:
