@@ -11,6 +11,8 @@ module Kondate
     end
 
     def bootstrap
+      $stdout.sync = true
+      $stderr.sync = true
       bootstrap_middleware_recipes
       bootstrap_role_recipes
     end
