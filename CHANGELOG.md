@@ -1,3 +1,9 @@
+# 0.4.8 (2017-01-27)
+
+Enhancements:
+
+* Add hostname to itamae log prefix
+
 # 0.4.7 (2017-01-26)
 
 Fixes:
