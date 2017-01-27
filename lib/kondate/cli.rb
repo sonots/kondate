@@ -8,6 +8,7 @@ require 'shellwords'
 require 'find'
 require 'facter'
 require 'parallel'
+require 'frontkick'
 
 module Kondate
   class CLI < Thor
@@ -156,7 +157,11 @@ module Kondate
         command << " --recipe-graph=#{@options[:recipe_graph]}" if @options[:recipe_graph]
         command << " bootstrap.rb"
         $stdout.puts "env #{env.map {|k, v| "#{k}=#{v.shellescape}" }.join(' ')} #{command}"
-        return false unless system(env, command)
+
+        output_with_hostname(host) do |out, err|
+          result = Frontkick.exec(env, command, out: out, err: err)
+          return false unless result.successful?
+        end
       end
       true
     end
@@ -181,9 +186,44 @@ module Kondate
         env['TARGET_NODE_FILE'] = property_file.path
         command = "bundle exec rspec #{spec_files.map{|f| f.shellescape }.join(' ')}"
         $stdout.puts "env #{env.map {|k, v| "#{k}=#{v.shellescape}" }.join(' ')} #{command}"
-        return false unless system(env, command)
+
+        output_with_hostname(host) do |out, err|
+          result = Frontkick.exec(env, command, out: out, err: err)
+          return false unless result.successful?
+        end
       end
       true
+    end
+
+    def output_with_hostname(host, &block)
+      out_r, out_w = IO.pipe
+      out_w.sync = true
+      err_r, err_w = IO.pipe
+      err_w.sync = true
+
+      $stdout.sync = true
+      $stderr.sync = true
+
+      out_thr = Thread.new do
+        while r = out_r.gets
+          $stdout.write "#{host} | #{r}"
+        end
+      end
+
+      err_thr = Thread.new do
+        while r = err_r.gets
+          $stderr.write "#{host} | #{r}"
+        end
+      end
+
+      yield(out_w, err_w)
+    ensure
+      out_r.close rescue nil
+      out_w.close rescue nil
+      err_r.close rescue nil
+      err_w.close rescue nil
+      out_thr.exit rescue nil
+      err_thr.exit rescue nil
     end
 
     def proceed?(property_files)
