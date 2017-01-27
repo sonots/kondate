@@ -6,6 +6,8 @@ require 'yaml'
 ### required for kondate #####
 host = ENV['TARGET_HOST']
 set :set_property, YAML.load_file(ENV['TARGET_NODE_FILE'])
+$stdout.sync = true
+$stderr.sync = true
 ############################
 
 set :backend, :ssh
