@@ -30,13 +30,13 @@ module Kondate
       end
 
       # @param [String] host hostname
-      # @return [Array] array of roles
+      # @return [Array] array of roles (strings)
       def get_roles(host)
         @roles_of_host[host]
       end
 
       # @param [String] role role
-      # @return [Array] array of hosts
+      # @return [Array] array of hosts (strings)
       #
       # Available from kondate >= 0.3.0
       def get_hosts(role)

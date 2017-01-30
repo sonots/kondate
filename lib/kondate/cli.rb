@@ -9,6 +9,7 @@ require 'find'
 require 'facter'
 require 'parallel'
 require 'frontkick'
+require 'set'
 
 module Kondate
   class CLI < Thor
@@ -19,10 +20,13 @@ module Kondate
 
     class_option :config, :aliases => ["-c"], :type => :string,  :default => nil
     class_option :dry_run,                    :type => :boolean, :default => false
+    class_option :help,                       :type => :boolean, :default => false
     # default_command :itamae
 
     def initialize(args = [], opts = [], config = {})
       super
+      require 'pry'
+      binding.pry
       Config.configure(@options)
     end
 
@@ -48,7 +52,7 @@ module Kondate
       end
     end
 
-    desc "itamae <host>", "Execute itamae"
+    desc "itamae <host>...", "Execute itamae"
     option :role,                        :type => :array,   :default => []
     option :recipe,                      :type => :array,   :default => []
     option :debug,   :aliases => ["-d"], :type => :boolean, :default => false
@@ -56,11 +60,11 @@ module Kondate
     option :vagrant,                     :type => :boolean, :default => false
     option :profile,                     :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Save profiling data", :banner => "PATH"
     option :recipe_graph,                :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Write recipe dependency graph in DOT", :banner => "PATH"
-    def itamae(host)
-      with_host(host) {|property_files| do_itamae(host, property_files) }
+    def itamae(*hosts)
+      with_hosts(hosts) {|host, property_files| do_itamae(host, property_files) }
     end
 
-    desc "itamae-role <role>", "Execute itamae for multiple hosts in the role"
+    desc "itamae-role <role>...", "Execute itamae for multiple hosts in the role"
     option :role,                         :type => :array,   :default => []
     option :recipe,                       :type => :array,   :default => []
     option :debug,   :aliases => ["-d"],  :type => :boolean, :default => false
@@ -69,54 +73,65 @@ module Kondate
     option :profile,                      :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Save profiling data", :banner => "PATH"
     option :recipe_graph,                 :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Write recipe dependency graph in DOT", :banner => "PATH"
     option :parallel, :aliases => ["-p"], :type => :numeric, :default => Facter['processorcount'].value.to_i 
-    def itamae_role(role)
-      with_role(role) {|host, property_files| do_itamae(host, property_files) }
+    def itamae_roles(*roles)
+      with_roles(roles) {|host, property_files| do_itamae(host, property_files) }
     end
 
-    desc "serverspec <host>", "Execute serverspec"
+    desc "serverspec <host>...", "Execute serverspec"
     option :role,                        :type => :array,   :default => []
     option :recipe,                      :type => :array,   :default => []
     option :debug,   :aliases => ["-d"], :type => :boolean, :default => false
     option :confirm,                     :type => :boolean, :default => true
     option :vagrant,                     :type => :boolean, :default => false
-    def serverspec(host)
-      with_host(host) {|property_files| do_serverspec(host, property_files) }
+    def serverspec(*hosts)
+      with_hosts(hosts) {|host, property_files| do_serverspec(host, property_files) }
     end
 
-    desc "serverspec-role <role>", "Execute serverspec for multiple hosts in the role"
+    desc "serverspec-role <role>...", "Execute serverspec for multiple hosts in the role"
     option :role,                         :type => :array,   :default => []
     option :recipe,                       :type => :array,   :default => []
     option :debug,   :aliases => ["-d"],  :type => :boolean, :default => false
     option :confirm,                      :type => :boolean, :default => true
     option :vagrant,                      :type => :boolean, :default => false
     option :parallel, :aliases => ["-p"], :type => :numeric, :default => Facter['processorcount'].value.to_i 
-    def serverspec_role(role)
-      with_role(role) {|host, property_files| do_serverspec(host, property_files) }
+    def serverspec_role(*roles)
+      with_roles(roles) {|host, property_files| do_serverspec(host, property_files) }
     end
 
     private
 
-    def with_host(host, &block)
-      property_files = build_property_files(host)
-      begin
-        print_property_files(property_files)
-        if proceed?(property_files)
-          exit(-1) unless yield(property_files)
-        end
-      ensure
-        clean_property_files(property_files)
+    def with_hosts(hosts, &block)
+      require 'pry'
+      binding.pry
+      if hosts.nil? or hosts.empty?
+        $stderr.puts 'No host'
+        exit(1)
       end
+      if hosts.size > 1
+        $stdout.puts "Number of parallels is #{@options[:parallel]}"
+        $stdout.puts "Target hosts are [#{hosts.join(", ")}]"
+      end
+
+      with_property_files(hosts, &block)
     end
 
-    def with_role(role, &block)
+    def with_roles(roles, &block)
       $stdout.puts "Number of parallels is #{@options[:parallel]}"
-      hosts = Kondate::Config.host_plugin.get_hosts(role)
+      hosts_set = Set.new
+      roles.each do |role|
+        hosts_set |= Kondate::Config.host_plugin.get_hosts(role)
+      end
+      hosts = hosts_set.to_a
       if hosts.nil? or hosts.empty?
         $stderr.puts 'No host'
         exit(1)
       end
       $stdout.puts "Target hosts are [#{hosts.join(", ")}]"
 
+      with_property_files(hosts, &block)
+    end
+
+    def with_property_files(hosts, &block)
       property_files_of_host, summarized_property_files, hosts_of_role = build_property_files_of_host(hosts)
       begin
         print_property_files(summarized_property_files, hosts_of_role)
