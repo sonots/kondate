@@ -1,3 +1,9 @@
+# 0.4.9 (2017-02-02)
+
+Enhancements:
+
+* Add hostname to itamae log prefix without using IO.pipe so that we can use debuggers such as pry
+
 # 0.4.8 (2017-01-27)
 
 Enhancements:
