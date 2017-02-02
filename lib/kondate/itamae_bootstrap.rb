@@ -13,6 +13,7 @@ module Kondate
     def bootstrap
       $stdout.sync = true
       $stderr.sync = true
+      tweak_logger
       bootstrap_middleware_recipes
       bootstrap_role_recipes
     end
@@ -25,6 +26,17 @@ module Kondate
 
     def include_recipe(recipe)
       @context.include_recipe(recipe)
+    end
+
+    def tweak_logger
+      hostname = node[:hostname]
+      ::Itamae::Logger::Formatter.class_eval do
+        define_method(:call) do |severity, datetime, progname, msg|
+          log = "%s | %s : %s" % [hostname, "%5s" % severity, msg2str(msg)]
+
+          (colored ? colorize(log, severity) : log) + "\n"
+        end
+      end
     end
 
     def bootstrap_middleware_recipes

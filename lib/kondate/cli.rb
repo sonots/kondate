@@ -158,10 +158,7 @@ module Kondate
         command << " bootstrap.rb"
         $stdout.puts "env #{env.map {|k, v| "#{k}=#{v.shellescape}" }.join(' ')} #{command}"
 
-        output_with_hostname(host) do |out, err|
-          result = Frontkick.exec(env, command, out: out, err: err)
-          return false unless result.successful?
-        end
+        return false unless system(env, command)
       end
       true
     end
