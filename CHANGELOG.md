@@ -1,3 +1,9 @@
+# 0.4.11 (2017-03-09)
+
+Enhancements:
+
+* Use Parallel::ProcessorCount instead of Facter gem
+
 # 0.4.10 (2017-03-09)
 
 Fixes:
