@@ -1,3 +1,9 @@
+# 0.4.10 (2017-03-09)
+
+Fixes:
+
+* Fix Net::SSH::Config ssh_keys
+
 # 0.4.9 (2017-02-02)
 
 Enhancements:
