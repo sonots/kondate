@@ -145,7 +145,7 @@ module Kondate
         else
           config = Net::SSH::Config.for(host)
           command << " -u #{properties['ssh_user'] || config[:user] || ENV['USER']}"
-          command << " -i #{(properties['ssh_keys'] || []).first || (config[:ssh_keys] || []).first || (File.exist?(File.expand_path('~/.ssh/id_dsa')) ? '~/.ssh/id_dsa' : '~/.ssh/id_rsa')}"
+          command << " -i #{(properties['ssh_keys'] || []).first || (config[:keys] || []).first || (File.exist?(File.expand_path('~/.ssh/id_dsa')) ? '~/.ssh/id_dsa' : '~/.ssh/id_rsa')}"
           command << " -p #{properties['ssh_port'] || config[:port] || 22}"
         end
 
