@@ -6,11 +6,13 @@ require_relative '../kondate'
 require 'fileutils'
 require 'shellwords'
 require 'find'
-require 'facter'
 require 'parallel'
+require 'parallel/processor_count'
 
 module Kondate
   class CLI < Thor
+    extend Parallel::ProcessorCount
+
    # cf. http://qiita.com/KitaitiMakoto/items/c6b9d6311c20a3cc21f9
     def self.exit_on_failure?
       true
@@ -67,7 +69,7 @@ module Kondate
     option :vagrant,                      :type => :boolean, :default => false
     option :profile,                      :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Save profiling data", :banner => "PATH"
     option :recipe_graph,                 :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Write recipe dependency graph in DOT", :banner => "PATH"
-    option :parallel, :aliases => ["-p"], :type => :numeric, :default => Facter['processorcount'].value.to_i 
+    option :parallel, :aliases => ["-p"], :type => :numeric, :default => processor_count
     def itamae_role(role)
       with_role(role) {|host, property_files| do_itamae(host, property_files) }
     end
@@ -88,7 +90,7 @@ module Kondate
     option :debug,   :aliases => ["-d"],  :type => :boolean, :default => false
     option :confirm,                      :type => :boolean, :default => true
     option :vagrant,                      :type => :boolean, :default => false
-    option :parallel, :aliases => ["-p"], :type => :numeric, :default => Facter['processorcount'].value.to_i 
+    option :parallel, :aliases => ["-p"], :type => :numeric, :default => processor_count
     def serverspec_role(role)
       with_role(role) {|host, property_files| do_serverspec(host, property_files) }
     end
