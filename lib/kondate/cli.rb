@@ -141,13 +141,12 @@ module Kondate
         command << " -h #{host}"
 
         properties = property_file.load
-        $stdout.puts "properties => #{properties}" if @options[:debug]
 
         if @options[:vagrant]
           command << " --vagrant"
         else
           config = Net::SSH::Config.for(host)
-          $stdout.puts "Net::SSH::Config.for(#{host.inspect}) => #{config}" if @options[:debug]
+          $stdout.puts "DEBUG: Net::SSH::Config.for(#{host.inspect}) => #{config}" if @options[:debug]
           command << " -u #{properties['ssh_user'] || config[:user] || ENV['USER']}"
           command << " -i #{(properties['ssh_keys'] || []).first || (config[:keys] || []).first || (File.exist?(File.expand_path('~/.ssh/id_dsa')) ? '~/.ssh/id_dsa' : '~/.ssh/id_rsa')}"
           command << " -p #{properties['ssh_port'] || config[:port] || 22}"
