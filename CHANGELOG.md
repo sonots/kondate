@@ -1,3 +1,9 @@
+# 0.4.12 (2017-03-17)
+
+Enhancements:
+
+* Output Net::SSH::Config.for(host) as debug log
+
 # 0.4.11 (2017-03-09)
 
 Enhancements:
