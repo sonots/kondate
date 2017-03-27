@@ -1,3 +1,9 @@
+# 0.4.14 (2017-03-27)
+
+Reverts:
+
+* Fallback to ENV['USER'] rather than Etc.getlogin if ssh_config[:ssh_user] is not available
+
 # 0.4.13 (2017-03-27)
 
 Enhancements:
