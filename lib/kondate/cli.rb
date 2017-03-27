@@ -147,7 +147,9 @@ module Kondate
         else
           # itamae itself sees Net:SSH::Config.for(host)
           # here, we set ssh config if property file specially specifies
-          command << " -u #{properties['ssh_user']}" if properties['ssh_user']
+          config = Net::SSH::Config.for(host, Net::SSH::Config.default_files)
+          # itamae fallbacks to Etc.getlogin, but we prefer to fallback to ENV['USER'], then Etc.getlogin
+          command << " -u #{properties['ssh_user'] || config[:user] || ENV['USER'] || ENV['LOGNAME'] || Etc.getlogin || Etc.getpwuid.name}"
           command << " -i #{(Array(properties['ssh_keys']) || []).first}" if properties['ssh_keys']
           command << " -p #{properties['ssh_port']}" if properties['ssh_port']
         end
