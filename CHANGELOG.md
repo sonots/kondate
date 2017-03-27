@@ -1,3 +1,9 @@
+# 0.4.13 (2017-03-27)
+
+Enhancements:
+
+* Fix to see all Net::SSH::Config keys in itamae
+
 # 0.4.12 (2017-03-17)
 
 Enhancements:
