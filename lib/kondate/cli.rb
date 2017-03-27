@@ -145,11 +145,11 @@ module Kondate
         if @options[:vagrant]
           command << " --vagrant"
         else
-          config = Net::SSH::Config.for(host)
-          $stdout.puts "DEBUG: Net::SSH::Config.for(#{host.inspect}) => #{config}" if @options[:debug]
-          command << " -u #{properties['ssh_user'] || config[:user] || ENV['USER']}"
-          command << " -i #{(properties['ssh_keys'] || []).first || (config[:keys] || []).first || (File.exist?(File.expand_path('~/.ssh/id_dsa')) ? '~/.ssh/id_dsa' : '~/.ssh/id_rsa')}"
-          command << " -p #{properties['ssh_port'] || config[:port] || 22}"
+          # itamae itself sees Net:SSH::Config.for(host)
+          # here, we set ssh config if property file specially specifies
+          command << " -u #{properties['ssh_user']}" if properties['ssh_user']
+          command << " -i #{(Array(properties['ssh_keys']) || []).first}" if properties['ssh_keys']
+          command << " -p #{properties['ssh_port']}" if properties['ssh_port']
         end
 
         command << " -y #{property_file.path}"
