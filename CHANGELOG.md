@@ -1,3 +1,9 @@
+# 0.4.15 (2018-02-01)
+
+Changes:
+
+* Remove `bundle exec` from `bundle exec itamae` because `bundle exec` inside `bundle exec` introcudes some troubles.
+
 # 0.4.14 (2017-03-27)
 
 Reverts:
