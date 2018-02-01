@@ -137,7 +137,7 @@ module Kondate
       env['RUBYOPT'] = "-I #{Config.plugin_dir} -r bundler/setup -r ext/itamae/kondate"
       property_files.each do |role, property_file|
         next if property_file.empty?
-        command = "bundle exec itamae ssh"
+        command = "itamae ssh"
         command << " -h #{host}"
 
         properties = property_file.load
@@ -185,7 +185,7 @@ module Kondate
 
         env['TARGET_HOST'] = host
         env['TARGET_NODE_FILE'] = property_file.path
-        command = "bundle exec rspec #{spec_files.map{|f| f.shellescape }.join(' ')}"
+        command = "rspec #{spec_files.map{|f| f.shellescape }.join(' ')}"
         $stdout.puts "env #{env.map {|k, v| "#{k}=#{v.shellescape}" }.join(' ')} #{command}"
 
         return false unless system(env, command)
