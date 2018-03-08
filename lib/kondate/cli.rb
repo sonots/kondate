@@ -57,6 +57,7 @@ module Kondate
     option :vagrant,                     :type => :boolean, :default => false
     option :profile,                     :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Save profiling data", :banner => "PATH"
     option :recipe_graph,                :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Write recipe dependency graph in DOT", :banner => "PATH"
+    option :shell,                       :type => :string,  :default => "/bin/sh"
     option :login_shell,                 :type => :boolean, :default => false
     def itamae(host)
       with_host(host) {|property_files| do_itamae(host, property_files) }
@@ -71,6 +72,7 @@ module Kondate
     option :profile,                      :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Save profiling data", :banner => "PATH"
     option :recipe_graph,                 :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Write recipe dependency graph in DOT", :banner => "PATH"
     option :parallel, :aliases => ["-p"], :type => :numeric, :default => processor_count
+    option :shell,                        :type => :string,  :default => "/bin/sh"
     option :login_shell,                  :type => :boolean, :default => false
     def itamae_role(role)
       with_role(role) {|host, property_files| do_itamae(host, property_files) }
@@ -161,6 +163,7 @@ module Kondate
         command << " --dry-run" if @options[:dry_run]
         command << " --profile=#{@options[:profile]}" if @options[:profile]
         command << " --recipe-graph=#{@options[:recipe_graph]}" if @options[:recipe_graph]
+        command << " --shell=#{@options[:shell]}" if @options[:shell]
         command << " --login-shell" if @options[:login_shell]
         command << " bootstrap.rb"
         $stdout.puts "env #{env.map {|k, v| "#{k}=#{v.shellescape}" }.join(' ')} #{command}"
