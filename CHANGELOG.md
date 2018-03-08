@@ -1,3 +1,11 @@
+# 0.5.0 (To be released)
+
+Enhancements:
+
+* Support --shell option of itamae
+* Support --login-shell option of itamae
+* Make configurable itamae-kondate and serverspec-kondate options on .kondate.conf
+
 # 0.4.15 (2018-02-01)
 
 Changes:
