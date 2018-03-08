@@ -120,7 +120,8 @@ You can customize the directory tree with this conf.
 You can configure itamae-kondate options on .kondate.conf, too as:
 
 ```
-itamae_options:
+
+:
   shell: /bin/bash
 ```
 
@@ -131,7 +132,7 @@ See `itamae-kondate --help` for option list.
 You can configure serversepc-kondate options on .kondate.conf, too as:
 
 ```
-itamae_options:
+serverspec_options:
   vagrant: true
 ```
 
