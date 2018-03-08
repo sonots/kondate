@@ -115,6 +115,29 @@ host_plugin:
 
 You can customize the directory tree with this conf.
 
+#### Itamae options
+
+You can configure itamae-kondate options on .kondate.conf, too as:
+
+```
+itamae_options:
+  shell: /bin/bash
+```
+
+See `itamae-kondate --help` for option list.
+
+#### Serverspec options
+
+You can configure serversepc-kondate options on .kondate.conf, too as:
+
+```
+itamae_options:
+  vagrant: true
+```
+
+See `serverspec-kondate --help` for option list.
+
+
 ### hosts.yml
 
 The default uses `file` host plugin, and `hosts.yml`. The contents of `hosts.yml` look like below:

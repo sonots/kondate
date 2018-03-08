@@ -33,6 +33,14 @@ module Kondate
         @config_path ||= opts[:config] || ENV['KONDATE_CONFIG_PATH'] || DEFAULT_CONFIG_PATH
       end
 
+      def itamae_options
+        @itamae_options ||= Thor::CoreExt::HashWithIndifferentAccess.new(config[:itamae_options] || {})
+      end
+
+      def serverspec_options
+        @serverspec_options ||= Thor::CoreExt::HashWithIndifferentAccess.new(config[:serverspec_options] || {})
+      end
+
       def kondate_directories
         {
           'middleware_recipes_dir' => middleware_recipes_dir,

@@ -57,7 +57,7 @@ module Kondate
     option :vagrant,                     :type => :boolean, :default => false
     option :profile,                     :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Save profiling data", :banner => "PATH"
     option :recipe_graph,                :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Write recipe dependency graph in DOT", :banner => "PATH"
-    option :shell,                       :type => :string,  :default => "/bin/sh"
+    option :shell,                       :type => :string,  :default => Config.itamae_options[:shell] || "/bin/sh"
     option :login_shell,                 :type => :boolean, :default => false
     def itamae(host)
       with_host(host) {|property_files| do_itamae(host, property_files) }
@@ -72,7 +72,7 @@ module Kondate
     option :profile,                      :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Save profiling data", :banner => "PATH"
     option :recipe_graph,                 :type => :string,  :default => nil, :desc => "[EXPERIMENTAL] Write recipe dependency graph in DOT", :banner => "PATH"
     option :parallel, :aliases => ["-p"], :type => :numeric, :default => processor_count
-    option :shell,                        :type => :string,  :default => "/bin/sh"
+    option :shell,                        :type => :string,  :default => Config.itamae_options[:shell] || "/bin/sh"
     option :login_shell,                  :type => :boolean, :default => false
     def itamae_role(role)
       with_role(role) {|host, property_files| do_itamae(host, property_files) }
@@ -101,6 +101,14 @@ module Kondate
 
     private
 
+    def itamae_options
+      @itamae_options ||= Config.itamae_options.merge(@options)
+    end
+
+    def serverspec_options
+      @serverspec_options ||= Config.serverspec_options.merge(@options)
+    end
+
     def with_host(host, &block)
       property_files = build_property_files(host)
       begin
@@ -115,7 +123,7 @@ module Kondate
 
     def with_role(role, &block)
       $stdout.puts "Number of parallels is #{@options[:parallel]}"
-      hosts = Kondate::Config.host_plugin.get_hosts(role)
+      hosts = Config.host_plugin.get_hosts(role)
       if hosts.nil? or hosts.empty?
         $stderr.puts 'No host'
         exit(1)
@@ -146,7 +154,7 @@ module Kondate
 
         properties = property_file.load
 
-        if @options[:vagrant]
+        if itamae_options[:vagrant]
           command << " --vagrant"
         else
           # itamae itself sees Net:SSH::Config.for(host)
@@ -159,12 +167,12 @@ module Kondate
         end
 
         command << " -y #{property_file.path}"
-        command << " -l=debug" if @options[:debug]
-        command << " --dry-run" if @options[:dry_run]
-        command << " --profile=#{@options[:profile]}" if @options[:profile]
-        command << " --recipe-graph=#{@options[:recipe_graph]}" if @options[:recipe_graph]
-        command << " --shell=#{@options[:shell]}" if @options[:shell]
-        command << " --login-shell" if @options[:login_shell]
+        command << " -l=debug" if itamae_options[:debug]
+        command << " --dry-run" if itamae_options[:dry_run]
+        command << " --profile=#{itamae_options[:profile]}" if itamae_options[:profile]
+        command << " --recipe-graph=#{itamae_options[:recipe_graph]}" if itamae_options[:recipe_graph]
+        command << " --shell=#{itamae_options[:shell]}" if itamae_options[:shell]
+        command << " --login-shell" if itamae_options[:login_shell]
         command << " bootstrap.rb"
         $stdout.puts "env #{env.map {|k, v| "#{k}=#{v.shellescape}" }.join(' ')} #{command}"
 
@@ -175,7 +183,7 @@ module Kondate
 
     def do_serverspec(host, property_files)
       env = {}
-      env['TARGET_VAGRANT'] = '1' if @options[:vagrant]
+      env['TARGET_VAGRANT'] = '1' if serverspec_options[:vagrant]
       env['RUBYOPT'] = "-I #{Config.plugin_dir} -r bundler/setup -r ext/serverspec/kondate"
       property_files.each do |role, property_file|
         next if property_file.empty?
