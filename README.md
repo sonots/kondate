@@ -120,8 +120,7 @@ You can customize the directory tree with this conf.
 You can configure itamae-kondate options on .kondate.conf, too as:
 
 ```
-
-:
+itamae_options:
   shell: /bin/bash
 ```
 
