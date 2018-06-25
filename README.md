@@ -201,7 +201,7 @@ attributes:
 
 In addition, you can also prepare environment property files such as:
 
-properties/environments/development.yml
+properties/environments/`#{ENV['ENVIRONMENT'] || 'development'}`.yml
 
 ```
 global_attributes:
