@@ -1,4 +1,4 @@
-# 0.5.0 (To be released)
+# 0.5.0
 
 Enhancements:
 
